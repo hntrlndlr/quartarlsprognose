@@ -10,7 +10,7 @@ SITZUNGEN = {
     "KZT1": 12,
     "KZT2": 12,
     "LZT": 46,  # optional, kann leer bleiben
-    "LZT2": 20  # optional
+    "RFP": 20  # optional
 }
 
 def berechne_sitzungen(start_sitzung, start_sitzung_nummer, start_woche, umwandlung=False, rueckfallprophylaxe=False):
@@ -31,26 +31,26 @@ def berechne_sitzungen(start_sitzung, start_sitzung_nummer, start_woche, umwandl
         if not umwandlung:
             # Keine LZT Sitzungen
             sitzungen_config["LZT"] = 0
-            sitzungen_config["LZT2"] = 0
+            sitzungen_config["RFP"] = 0
         else:
             # Umwandlung geplant: KZT1(12) + KZT2(12) + LZT(36) = 60
             sitzungen_config["LZT"] = 36
-            sitzungen_config["LZT2"] = 0
+            sitzungen_config["RFP"] = 0
     
     # LZT Phase: LZT = 60, oder 80 mit Rückfallprophylaxe
-    # LZT und LZT2 werden als eine Phase behandelt
-    if start_sitzung in ["LZT", "LZT2"]:
+    # LZT und RFP werden als eine Phase behandelt
+    if start_sitzung in ["LZT", "RFP"]:
         total_lzt = 80 if rueckfallprophylaxe else 60
         
         # Wenn Patient in LZT startet, alle Sitzungen in LZT
         if start_sitzung == "LZT":
             sitzungen_config["LZT"] = total_lzt
-            sitzungen_config["LZT2"] = 0
-        # Wenn Patient in LZT2 startet, verbleibende Sitzungen in LZT2
-        else:  # LZT2
-            # LZT ist bereits abgeschlossen, alle verbleibenden Sitzungen in LZT2
+            sitzungen_config["RFP"] = 0
+        # Wenn Patient in RFP startet, verbleibende Sitzungen in RFP
+        else:  # RFP
+            # LZT ist bereits abgeschlossen, alle verbleibenden Sitzungen in RFP
             sitzungen_config["LZT"] = 0
-            sitzungen_config["LZT2"] = total_lzt
+            sitzungen_config["RFP"] = total_lzt
     
     # Sitzungen ab der gewählten Startsitzung
     ergebnisse = {key: 0 for key in SITZUNGEN.keys()}
@@ -81,8 +81,8 @@ hinzufuegen = st.radio("Willst du einen neuen Patienten hinzufügen?", ["Ja", "N
 
 if hinzufuegen == "Ja":
     name = st.text_input("Name des Patienten", key="name")
-    start_woche = st.number_input("Startwoche (1-12)", 1, 12, 1, key="startwoche")
-    erste_sitzung = st.selectbox("Erste Sitzung", list(SITZUNGEN.keys()), key="erste_sitzung")
+    start_woche = st.number_input("Startwoche im Quartal (1-12)", 1, 12, 1, key="startwoche")
+    erste_sitzung = st.selectbox("Erste Sitzung im Quartal", list(SITZUNGEN.keys()), key="erste_sitzung")
     
     # Dynamische Sitzungsnummer basierend auf gewähltem Typ
     max_sitzung_nummer = SITZUNGEN[erste_sitzung]
@@ -111,7 +111,7 @@ if hinzufuegen == "Ja":
         else:
             st.info("Umwandlung zu LZT geplant: KZT1 + KZT2 + LZT = 60 Sitzungen (LZT: 36)")
     
-    if erste_sitzung in ["LZT", "LZT2"]:
+    if erste_sitzung in ["LZT", "RFP"]:
         st.write("---")
         rueckfall_antwort = st.radio(
             "Ist eine Rückfallprophylaxe geplant?", 
@@ -136,7 +136,7 @@ if hinzufuegen == "Ja":
         # Zusätzliche Info-Felder
         if erste_sitzung in ["KZT1", "KZT2"]:
             patient_data["Umwandlung"] = "Ja" if umwandlung else "Nein"
-        if erste_sitzung in ["LZT", "LZT2"]:
+        if erste_sitzung in ["LZT", "RFP"]:
             patient_data["Rückfallprophylaxe"] = "Ja" if rueckfallprophylaxe else "Nein"
         
         st.session_state.patients.append(patient_data)
