@@ -111,7 +111,7 @@ if hinzufuegen == "Ja":
         else:
             st.info("Umwandlung zu LZT geplant: KZT1 + KZT2 + LZT = 60 Sitzungen (LZT: 36)")
     
-    if erste_sitzung in ["LZT", "RFP"]:
+    if erste_sitzung in ["LZT"]:
         st.write("---")
         rueckfall_antwort = st.radio(
             "Ist eine Rückfallprophylaxe geplant?", 
