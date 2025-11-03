@@ -31,11 +31,6 @@ def load_data():
         return pd.DataFrame(columns=['Datum', 'Klient', 'Sitzungsart', 'Nummer']).astype(
             {'Datum': 'datetime64[ns]', 'Klient': 'object', 'Sitzungsart': 'object', 'Nummer': 'Int64'}
         )
-
-
-def save_data(df):
-    df.to_csv(DATA_FILE, index=False)
-
 def setze_basissitzungen(name: str, start_datum: date) -> pd.DataFrame:
     sitzungen_data = []
     start_timestamp = pd.Timestamp(start_datum) 
@@ -80,7 +75,6 @@ def add_sessions_callback(session_type, start_nr=None):
             )
 
         st.session_state.sitzungen = pd.concat([st.session_state.sitzungen, neue_sitzungen_df], ignore_index=True)
-        save_data(st.session_state.sitzungen)
         st.success(f"{session_type} Sitzungen ab Nr. {start_nr} hinzugefügt!")
         st.session_state.last_button_click = None
         
@@ -113,7 +107,6 @@ def convert_kzt_to_lzt_callback(start_kzt_nr):
     # Entfernt alte KZT-Sitzungen und fügt LZT hinzu
     klient_termine_bereinigt = klient_termine[~((klient_termine["Sitzungsart"] == "KZT") & (klient_termine["Nummer"] >= start_kzt_nr))]
     st.session_state.sitzungen = pd.concat([klient_termine_bereinigt, neue_sitzungen], ignore_index=True)
-    save_data(st.session_state.sitzungen)
     st.success(f"KZT ab Sitzung {start_kzt_nr} in LZT umgewandelt.")
     st.session_state.last_button_click = None
     
@@ -206,7 +199,6 @@ def update_klient_termine_in_session(client, klienten_termine):
         [st.session_state.sitzungen, klienten_termine],
         ignore_index=True
     )
-    save_data(st.session_state.sitzungen)
 
 def verschiebe_alle(date, client, diff_days):
     klienten_termine = hole_klienten_termine(client)
@@ -260,9 +252,6 @@ def loesche_sup_termin(date, title):
     
     # Aktualisieren des Session State
     st.session_state.sitzungen = termine
-    
-    # Daten speichern
-    save_data(st.session_state.sitzungen)
 
    
 
@@ -294,19 +283,76 @@ def wochentag_auswahl():
 
 # --- STREAMLIT ANWENDUNG ---
 
-# Lade Daten beim Skriptstart
-if 'sitzungen' not in st.session_state:
-    st.session_state.sitzungen = load_data()
+st.set_page_config(page_title="IPP Ambulanzverwaltungstool", layout="wide")
+st.title("IPP Ambulanzverwaltungstool")
 
 # Initialisiere den Zustand für die Benutzerinteraktion
 if 'last_button_click' not in st.session_state:
     st.session_state.last_button_click = None
+if 'sitzungen' not in st.session_state:
+    st.session_state.sitzungen = pd.DataFrame(
+        columns=['Datum', 'Klient', 'Sitzungsart', 'Nummer', 'Art Supervision', 'Stundenanzahl'])
 
 clients = st.session_state.sitzungen["Klient"].dropna().unique()
 
-st.title("IPP Ambulanztool")
+# --- SIDEBAR ---
+with st.sidebar:
+    st.subheader("Datenquelle auswählen")
 
-tabs = st.tabs(["Kalender", "Klientenverwaltung", "Quartalsprognose", "Supervision"])
+    if 'data_loaded' not in st.session_state:
+        st.session_state.data_loaded = False
+
+    if st.button("Neuen Datensatz beginnen"):
+        st.session_state.sitzungen = pd.DataFrame(
+            columns=['Datum', 'Klient', 'Sitzungsart', 'Nummer']
+        ).astype(
+            {'Datum': 'datetime64[ns]', 'Klient': 'object', 'Sitzungsart': 'object', 'Nummer': 'Int64'}
+        )
+        st.session_state.ausgewaehlter_klient = ""
+        st.session_state.klient_termine_filtered = pd.DataFrame()
+        st.session_state.last_button_click = None
+        st.session_state.data_loaded = True
+
+    uploaded_file = st.file_uploader("CSV-Datei hochladen", type="csv")
+    if uploaded_file is not None and not st.session_state.data_loaded:
+        df = pd.read_csv(uploaded_file, parse_dates=['Datum'])
+        st.session_state.sitzungen = df.astype(
+            {'Datum': 'datetime64[ns]', 'Klient': 'object', 'Sitzungsart': 'object', 'Nummer': 'Int64'}
+        )
+        
+        # Standardmäßig ersten Klienten auswählen, falls vorhanden
+        clients = st.session_state.sitzungen["Klient"].dropna().unique()
+        if len(clients) > 0:
+            st.session_state.ausgewaehlter_klient = clients[0]
+            st.session_state.klient_termine_filtered = st.session_state.sitzungen[
+                st.session_state.sitzungen['Klient'] == clients[0]
+            ]
+        else:
+            st.session_state.ausgewaehlter_klient = ""
+            st.session_state.klient_termine_filtered = pd.DataFrame()
+            
+        st.session_state.last_button_click = None
+        st.session_state.data_loaded = True
+        st.success("CSV-Datei erfolgreich geladen!")
+
+    # --- CSV Download ---
+    st.subheader("Daten sichern")
+    if 'sitzungen' in st.session_state and not st.session_state.sitzungen.empty:
+        csv = st.session_state.sitzungen.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="Daten als CSV herunterladen",
+            data=csv,
+            file_name="ipp_ambulanzdaten.csv",
+            mime="text/csv"
+        )
+
+
+
+
+tabs = st.tabs(["Kalender", "Klientenverwaltung", "Quartalsprognose", "Supervision", "Test"])
+
+with tabs[4]:
+    st.write(st.session_state.sitzungen)
 
 with tabs[0]:
     st.header("Kalenderübersicht")
@@ -418,33 +464,7 @@ with tabs[0]:
 
 
 with tabs[1]:
-    st.header("Klientenverwaltung")
-    
-    # Sidebar für Navigation oder Aktionen
-    with st.sidebar:
-        st.write("Verwaltungsoptionen")
-        if st.button("Daten speichern"):
-            save_data(st.session_state.sitzungen)
-            st.success("Daten gespeichert!")
-        
-        # --- NEUE LOGIK: ALLE DATEN LÖSCHEN ---
-        if st.button("Alle Daten löschen"):
-            if os.path.exists(DATA_FILE):
-                os.remove(DATA_FILE) # Löscht die physische Datei
-            # Setzt den Session State zurück
-            st.session_state.sitzungen = pd.DataFrame(columns=['Datum', 'Klient', 'Sitzungsart', 'Nummer']).astype(
-                {'Datum': 'datetime64[ns]', 'Klient': 'object', 'Sitzungsart': 'object', 'Nummer': 'Int64'}
-            )
-            # Setzt auch die anderen Session States zurück, um Fehler zu vermeiden
-            st.session_state.ausgewaehlter_klient = ""
-            st.session_state.last_button_click = None
-            
-            st.info("Alle Daten wurden gelöscht. App wird neu gestartet.")
-            # Cache leeren und App neu starten
-            st.cache_data.clear() 
-            st.rerun()
-        # --- ENDE NEUE LOGIK ---
-    
+    st.header("Klientenverwaltung")    
     st.subheader("Neuen Klienten hinzufügen")
     with st.form("eingabemaske_klient"):
         name = st.text_input("Name des Klienten", max_chars=2)
@@ -458,13 +478,6 @@ with tabs[1]:
             elif name and start_datum_input:
                 p_sitzungen = setze_basissitzungen(name, start_datum_input) 
                 st.session_state.sitzungen = pd.concat([st.session_state.sitzungen, p_sitzungen], ignore_index=True)
-                save_data(st.session_state.sitzungen)
-                
-                # Direkt neuen Patienten als aktuell auswählen
-                st.session_state.ausgewaehlter_klient = name
-                st.session_state.klient_termine_filtered = st.session_state.sitzungen[
-                    st.session_state.sitzungen['Klient'] == name
-                ]
                 
                 st.success(f"Klient {name} mit Basissitzungen hinzugefügt!")
                 st.rerun()
@@ -716,11 +729,10 @@ with tabs[3]:
                 })
                 
                 st.session_state.sitzungen = pd.concat([st.session_state.sitzungen,sup_sitzung], ignore_index = True)
-                save_data(st.session_state.sitzungen)
                 st.rerun()
         supervisionen = st.session_state.sitzungen[st.session_state.sitzungen["Sitzungsart"] == "Supervision"]
         if supervisionen.size>0:
-            st.subheader("Supervisionsübersicht (IST vs SOLL")
+            st.subheader("Supervisionsübersicht (IST vs SOLL)")
             with st.form("sup_ov"):
                 due_day = st.date_input("Bitte wähle einen Stichtag aus.", format="DD/MM/YYYY")
                 if st.form_submit_button("Bestätigen"):
