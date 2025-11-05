@@ -518,6 +518,13 @@ with tabs[1]:
             on_change=select_client_callback
         )
     
+        if "last_button_click" not in st.session_state:
+            st.session_state.last_button_click = None
+        
+        if "ausgewaehlter_klient" not in st.session_state:
+            st.session_state.ausgewaehlter_klient = None
+        
+        # Dynamische Anzeige nur, wenn ein Klient ausgewählt ist
         if st.session_state.ausgewaehlter_klient:
             klient_termine = st.session_state.klient_termine_filtered
             st.header(f"Übersicht für {st.session_state.ausgewaehlter_klient}")
@@ -602,6 +609,7 @@ with tabs[1]:
                     st.warning("Probatorik (4) und Anamnese (1) werden automatisch hinzugefügt.")
                     if st.form_submit_button("Bestätigen"):
                         add_sessions_callback("Probatorik")
+                        st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
             
             elif st.session_state.last_button_click == "KZT":
@@ -614,6 +622,7 @@ with tabs[1]:
                         st.warning("KZT (1 und 2; 24 Sitzungen) wird hinzugefügt.")
                     if st.form_submit_button("KZT-Sitzungen hinzufügen"):
                         add_sessions_callback("KZT", start_kzt)
+                        st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
             
             elif st.session_state.last_button_click == "LZT":
@@ -626,6 +635,7 @@ with tabs[1]:
                         st.warning("LZT (60 Sitzungen) wird hinzugefügt.")
                     if st.form_submit_button("LZT-Sitzungen hinzufügen"):
                         add_sessions_callback("LZT", start_lzt)
+                        st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
             
             elif st.session_state.last_button_click == "RFP":
@@ -638,6 +648,7 @@ with tabs[1]:
                         st.warning("RFP (20 Sitzungen) wird hinzugefügt.")
                     if st.form_submit_button("RFP-Sitzungen hinzufügen"):
                         add_sessions_callback("RFP", start_rfp)
+                        st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
             
             elif st.session_state.last_button_click == "Umwandlung":
@@ -649,6 +660,7 @@ with tabs[1]:
                     start_umwandlung = st.number_input(f"Ab welcher KZT-Sitzung (von {start_kzt} bis 24) soll die Therapie in eine LZT umgewandelt werden?", min_value=start_kzt, max_value=24)
                     if st.form_submit_button("Umwandlung bestätigen"):
                         convert_kzt_to_lzt_callback(start_umwandlung)
+                        st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
     
     else:
