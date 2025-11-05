@@ -359,120 +359,115 @@ with tabs[4]:
 
 with tabs[0]:
     st.header("Kalenderübersicht")
-    clients = st.session_state.sitzungen["Klient"].dropna().unique()
+    st.header("Kalender")
     
-    if clients.size > 0:
-        st.header("Kalender")
-        
-        calendar_options = {
-            "editable": True,
-            "selectable": True,
-            "headerToolbar": {
-                "left": "today prev,next",
-                "center": "title",
-                "right": "list,dayGridDay,dayGridWeek,dayGridMonth",
-            },
-            "firstDay": 1,
-            "locale": "de",
-        }
-        
-        calendar_events = get_calendar_events(st.session_state.sitzungen)
-        
-        clnd = calendar(
-            events=calendar_events,
-            options=calendar_options,
-            key="my_calendar",
-            callbacks="eventClick"
-        )
-        
-        # Prüfen, ob ein Termin geklickt wurde
-        if clnd and "callback" in clnd and clnd["callback"] == "eventClick":
-            st.session_state.selected_event = clnd["eventClick"]["event"]
-
-        if "selected_event" in st.session_state and st.session_state.selected_event:
-            event_obj = st.session_state.selected_event
-            title = event_obj["title"]
-            start = event_obj["start"]
-
-            if "E-SV" in title or "G-SV" in title:             
+    calendar_options = {
+        "editable": True,
+        "selectable": True,
+        "headerToolbar": {
+            "left": "today prev,next",
+            "center": "title",
+            "right": "list,dayGridDay,dayGridWeek,dayGridMonth",
+        },
+        "firstDay": 1,
+        "locale": "de",
+    }
+    
+    calendar_events = get_calendar_events(st.session_state.sitzungen)
+    
+    clnd = calendar(
+        events=calendar_events,
+        options=calendar_options,
+        key="my_calendar",
+        callbacks="eventClick"
+    )
+    
+    # Prüfen, ob ein Termin geklickt wurde
+    if clnd and "callback" in clnd and clnd["callback"] == "eventClick":
+        st.session_state.selected_event = clnd["eventClick"]["event"]
+    
+    if "selected_event" in st.session_state and st.session_state.selected_event:
+        event_obj = st.session_state.selected_event
+        title = event_obj["title"]
+        start = event_obj["start"]
+    
+        if "E-SV" in title or "G-SV" in title:
+            st.header(f"{title} am {start}")
+    
+            with st.form("sup_loeschen"):
+                st.subheader("Supervisionstermin löschen")
+                st.warning("Dieser Supervisionstermin wird gelöscht!")
+                if st.form_submit_button("Bestätigen"):
+                    loesche_sup_termin(start, title)
+                    st.session_state.last_button_click = None
+                    st.session_state.selected_event = None
+                    st.rerun()
+        else:
+            klient_id = title.split(" - ")[0].strip()
+    
+            # Header nur anzeigen, wenn noch keine Aktion läuft
+            if st.session_state.get("last_button_click") is None:
                 st.header(f"{title} am {start}")
-                
-                with st.form("sup_loeschen"):
-                    st.subheader("Supervisionstermin löschen")
-                    st.warning("Dieser Supervisionstermin wird gelöscht!")
+    
+                col1, col2, col3, col4 = st.columns(4)
+                if col1.button("Terminausfall"):
+                    st.session_state.last_button_click = "Terminausfall"
+                if col2.button("PTG markieren"):
+                    st.session_state.last_button_click = "PTG"
+                if col3.button("Ab hier verschieben"):
+                    st.session_state.last_button_click = "Verschieben"
+                if col4.button("Therapieende"):
+                    st.session_state.last_button_click = "Ende"
+    
+            # Aktionen ausführen
+            if st.session_state.get("last_button_click") == "Terminausfall":
+                with st.form("terminausfall"):
+                    st.subheader("Termin ist ausgefallen")
+                    st.warning("Dieser Termin wird gelöscht und alle Termine um eine Woche verschoben")
                     if st.form_submit_button("Bestätigen"):
-                        loesche_sup_termin(start, title)
+                        verschiebe_termin_callback(start, klient_id)
                         st.session_state.last_button_click = None
                         st.session_state.selected_event = None
                         st.rerun()
-            else:
-                klient_id = title.split(" - ")[0].strip()
-                
-                # Header nur anzeigen, wenn noch keine Aktion läuft
-                if st.session_state.get("last_button_click") is None:
-                    st.header(f"{title} am {start}")
-
-                    col1, col2, col3, col4 = st.columns(4)
-                    if col1.button("Terminausfall"):
-                        st.session_state.last_button_click = "Terminausfall"
-                    if col2.button("PTG markieren"):
-                        st.session_state.last_button_click = "PTG"
-                    if col3.button("Ab hier verschieben"):
-                        st.session_state.last_button_click = "Verschieben"
-                    if col4.button("Therapieende"):
-                        st.session_state.last_button_click = "Ende"
-
-                # Aktionen ausführen
-                if st.session_state.get("last_button_click") == "Terminausfall":
-                    with st.form("terminausfall"):
-                        st.subheader("Termin ist ausgefallen")
-                        st.warning("Dieser Termin wird gelöscht und alle Termine um eine Woche verschoben")
-                        if st.form_submit_button("Bestätigen"):
-                            verschiebe_termin_callback(start, klient_id)
-                            st.session_state.last_button_click = None
-                            st.session_state.selected_event = None
-                            st.rerun()
-
-                elif st.session_state.get("last_button_click") == "PTG":
-                    with st.form("ptg"):
-                        st.subheader("Termin als PTG markieren")
-                        n_ptg = count_value_in_quarter(
-                            st.session_state.sitzungen[st.session_state.sitzungen["Klient"] == klient_id],
-                            start, "Sitzungsart", "PTG"
-                        )
-                        if n_ptg >= 3:
-                            st.warning("Dieses Quartal haben schon 3 PTG stattgefunden. Eine Abrechnung als PTG ist nicht möglich!")
-                            st.form_submit_button("Bestätigen", disabled=True)
-                        else:
-                            st.warning("Dieser Termin wird als PTG eingetragen. Die bisherigen Termine werden verschoben.")
-                        if st.form_submit_button("Bestätigen"):
-                            markiere_ptg(start, klient_id)
-                            st.session_state.last_button_click = None
-                            st.session_state.selected_event = None
-                            st.rerun()
-
-                elif st.session_state.get("last_button_click") == "Verschieben":
-                    with st.form("verschieben"):
-                        new_day = wochentag_auswahl()
-                        diff_tage = new_day - pd.to_datetime(start).weekday()
-                        if st.form_submit_button("Bestätigen"):
-                            verschiebe_alle(start, klient_id, diff_tage)
-                            st.session_state.last_button_click = None
-                            st.session_state.selected_event = None
-                            st.rerun()
-
-                elif st.session_state.get("last_button_click") == "Ende":
-                    with st.form("ende"):
-                        st.subheader("Therapie ab diesem Termin beenden")
-                        st.warning("Alle zukünftigen Termine inklusive des ausgewählten Termins werden gelöscht!")
-                        if st.form_submit_button("Bestätigen"):
-                            loesche_termine(start, klient_id)
-                            st.session_state.last_button_click = None
-                            st.session_state.selected_event = None
-                            st.rerun()
-                            
-    else:
-        st.info("Füge zuerst einen Klienten hinzu, um den Kalender zu sehen.")
+    
+            elif st.session_state.get("last_button_click") == "PTG":
+                with st.form("ptg"):
+                    st.subheader("Termin als PTG markieren")
+                    n_ptg = count_value_in_quarter(
+                        st.session_state.sitzungen[st.session_state.sitzungen["Klient"] == klient_id],
+                        start, "Sitzungsart", "PTG"
+                    )
+                    if n_ptg >= 3:
+                        st.warning("Dieses Quartal haben schon 3 PTG stattgefunden. Eine Abrechnung als PTG ist nicht möglich!")
+                        st.form_submit_button("Bestätigen", disabled=True)
+                    else:
+                        st.warning("Dieser Termin wird als PTG eingetragen. Die bisherigen Termine werden verschoben.")
+                    if st.form_submit_button("Bestätigen"):
+                        markiere_ptg(start, klient_id)
+                        st.session_state.last_button_click = None
+                        st.session_state.selected_event = None
+                        st.rerun()
+    
+            elif st.session_state.get("last_button_click") == "Verschieben":
+                with st.form("verschieben"):
+                    new_day = wochentag_auswahl()
+                    diff_tage = new_day - pd.to_datetime(start).weekday()
+                    if st.form_submit_button("Bestätigen"):
+                        verschiebe_alle(start, klient_id, diff_tage)
+                        st.session_state.last_button_click = None
+                        st.session_state.selected_event = None
+                        st.rerun()
+    
+            elif st.session_state.get("last_button_click") == "Ende":
+                with st.form("ende"):
+                    st.subheader("Therapie ab diesem Termin beenden")
+                    st.warning("Alle zukünftigen Termine inklusive des ausgewählten Termins werden gelöscht!")
+                    if st.form_submit_button("Bestätigen"):
+                        loesche_termine(start, klient_id)
+                        st.session_state.last_button_click = None
+                        st.session_state.selected_event = None
+                        st.rerun()
+    
 
 
 
@@ -491,8 +486,7 @@ with tabs[1]:
             elif name and start_datum_input:
                 p_sitzungen = setze_basissitzungen(name, start_datum_input) 
                 st.session_state.sitzungen = pd.concat([st.session_state.sitzungen, p_sitzungen], ignore_index=True)
-                
-                st.success(f"Klient {name} mit Basissitzungen hinzugefügt!")
+                st.success(f"Klient {name} mit Basissitzungen hinzugefügt!")                
                 st.rerun()
     
     if 'ausgewaehlter_klient' not in st.session_state:
