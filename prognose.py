@@ -683,6 +683,7 @@ with tabs[2]:
             if st.form_submit_button("Bestätigen"):
                 st.subheader(element)
                 quartals_termine = st.session_state.sitzungen[quartaljahre == element]
+                quartals_termine = quartals_termine[quartals_termine["Sitzungsart"] != "Supervision"]
                 prognose = quartals_termine["Sitzungsart"].value_counts().reset_index()
                 prognose.columns = ["Sitzungsart", "Anzahl"]
                 prognose["Schätzung (10/12)"] = (prognose["Anzahl"]*10/12).round()
