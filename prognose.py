@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import timedelta, date
 from streamlit_calendar import calendar
 import os
+import streamlit.components.v1 as components
 
 # --- KONFIGURATION & SETUP ---
 
@@ -352,7 +353,9 @@ with st.sidebar:
 tabs = st.tabs(["Kalender", "Klientenverwaltung", "Quartalsprognose", "Supervision", "Test"])
 
 with tabs[4]:
+    st.header("Testseite zur Anzeige der Sitzungsdaten")
     st.write(st.session_state.sitzungen)
+    st.write(st.session_state.sitzungen["Klient"].dropna().unique())
 
 with tabs[0]:
     st.header("Kalenderübersicht")
@@ -399,6 +402,8 @@ with tabs[0]:
                     st.warning("Dieser Supervisionstermin wird gelöscht!")
                     if st.form_submit_button("Bestätigen"):
                         loesche_sup_termin(start, title)
+                        st.session_state.last_button_click = None
+                        st.session_state.selected_event = None
                         st.rerun()
             else:
                 klient_id = title.split(" - ")[0].strip()
@@ -424,6 +429,8 @@ with tabs[0]:
                         st.warning("Dieser Termin wird gelöscht und alle Termine um eine Woche verschoben")
                         if st.form_submit_button("Bestätigen"):
                             verschiebe_termin_callback(start, klient_id)
+                            st.session_state.last_button_click = None
+                            st.session_state.selected_event = None
                             st.rerun()
 
                 elif st.session_state.get("last_button_click") == "PTG":
@@ -440,6 +447,8 @@ with tabs[0]:
                             st.warning("Dieser Termin wird als PTG eingetragen. Die bisherigen Termine werden verschoben.")
                         if st.form_submit_button("Bestätigen"):
                             markiere_ptg(start, klient_id)
+                            st.session_state.last_button_click = None
+                            st.session_state.selected_event = None
                             st.rerun()
 
                 elif st.session_state.get("last_button_click") == "Verschieben":
@@ -448,6 +457,8 @@ with tabs[0]:
                         diff_tage = new_day - pd.to_datetime(start).weekday()
                         if st.form_submit_button("Bestätigen"):
                             verschiebe_alle(start, klient_id, diff_tage)
+                            st.session_state.last_button_click = None
+                            st.session_state.selected_event = None
                             st.rerun()
 
                 elif st.session_state.get("last_button_click") == "Ende":
@@ -456,10 +467,12 @@ with tabs[0]:
                         st.warning("Alle zukünftigen Termine inklusive des ausgewählten Termins werden gelöscht!")
                         if st.form_submit_button("Bestätigen"):
                             loesche_termine(start, klient_id)
+                            st.session_state.last_button_click = None
+                            st.session_state.selected_event = None
                             st.rerun()
                             
-        else:
-            st.info("Füge zuerst einen Klienten hinzu, um die Übersicht zu sehen.")
+    else:
+        st.info("Füge zuerst einen Klienten hinzu, um den Kalender zu sehen.")
 
 
 
@@ -758,3 +771,18 @@ with tabs[3]:
            
     else:
         st.info("Füge zuerst einen Klienten hinzu, um die Übersicht zu sehen.")
+
+# --- POPUP-WARNUNG BEIM SCHLIEßEN DES FENSTERS ---
+components.html(
+    """
+    <script>
+    window.addEventListener("beforeunload", function (e) {
+        var confirmationMessage = "Möchtest du die Datei noch herunterladen, bevor du das Fenster schließt?";
+        e.preventDefault();
+        e.returnValue = confirmationMessage; // Für ältere Browser
+        return confirmationMessage;
+    });
+    </script>
+    """,
+    height=0,
+)
