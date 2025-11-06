@@ -350,7 +350,7 @@ with st.sidebar:
 
 
 
-tabs = st.tabs(["Kalender", "Klientenverwaltung", "Quartalsprognose", "Supervision", "Test"])
+tabs = st.tabs(["Kalender", "Klientenverwaltung", "Quartalsprognose", "Supervision", "Anleitung"])
 
 with tabs[4]:
     st.markdown("""
