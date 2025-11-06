@@ -353,10 +353,64 @@ with st.sidebar:
 tabs = st.tabs(["Kalender", "Klientenverwaltung", "Quartalsprognose", "Supervision", "Test"])
 
 with tabs[4]:
-    st.header("Testseite zur Anzeige der Sitzungsdaten")
-    st.write(st.session_state.sitzungen)
-    st.write(st.session_state.sitzungen["Klient"].dropna().unique())
+    st.markdown("""
+    ## Anleitung zur Nutzung des Programms
 
+    Dieses Programm dient der Verwaltung, Übersicht und Prognose psychotherapeutischer Sitzungen.  
+    Es ist so aufgebaut, dass alle wichtigen Arbeitsschritte in einer klaren Reihenfolge durchlaufen werden können.
+
+    ---
+
+    ### 1. Daten starten oder hochladen
+    - Beim Start kannst du entscheiden, ob du **eine bestehende CSV-Datei** mit Sitzungsdaten hochladen oder **eine neue Datensammlung beginnen** möchtest.  
+    - Die Datei wird **lokal im Cache** gespeichert – es werden **keine Daten extern gespeichert** (z. B. auf GitHub oder Servern).  
+    - Nach dem Upload stehen dir alle bisherigen Klient:innen und Termine im Programm zur Verfügung.
+
+    ---
+
+    ### 2. Neue Klient:innen hinzufügen
+    - Im entsprechenden Bereich kannst du **neue Klient:innen** anlegen.  
+    - Nach Eingabe der Daten (Name, Beginn, Sitzungsart usw.) werden sie in der Übersicht ergänzt.  
+    - Die neue Person wird **nicht automatisch ausgewählt**, sodass du gezielt weiterarbeiten kannst.
+
+    ---
+
+    ### 3. Sitzungen verwalten
+    - Du kannst Sitzungen **hinzufügen, ändern oder beenden**.  
+    - Das **Therapieende** kann über einen Button gesetzt werden; die Person bleibt jedoch in der Datenbank gespeichert.  
+    - Im Kalender oder in der Übersicht siehst du alle kommenden und vergangenen Sitzungen chronologisch.
+
+    ---
+
+    ### 4. Quartalsprognose
+    - Hier werden die vorhandenen Sitzungsdaten **nach Quartalen** ausgewertet.  
+    - Du siehst pro Quartal:
+      - wie viele Sitzungen pro Sitzungsart stattgefunden haben,  
+      - eine **Hochrechnung auf 10 von 12 Wochen**,  
+      - und ggf. die aktuelle Verteilung auf deine Gesamtarbeitszeit.  
+    - Die Prognose aktualisiert sich automatisch, sobald neue Daten hinzugefügt werden.
+
+    ---
+
+    ### 5. Kalender / Übersicht
+    - Zeigt die **aktuellen Sitzungen** aller Klient:innen in einem **Kalenderformat**.  
+    - Du kannst einzelne Klient:innen auswählen, um ihre individuelle Sitzungsübersicht zu sehen.  
+    - Bei mobilen Geräten wird der Kalender möglicherweise verkleinert dargestellt (je nach Browser).
+
+    ---
+
+    ### 6. Datenexport
+    - Die aktuelle Datensammlung kann jederzeit **als CSV-Datei exportiert** werden.  
+    - So kannst du deine Sitzungsdaten lokal sichern oder auf einem anderen Gerät weiterverwenden.
+
+    ---
+
+    ### 7. Allgemeine Hinweise
+    - Alle Daten bleiben **nur während der aktiven Sitzung im Cache** erhalten.  
+      Wenn du das Browserfenster schließt, sind die Änderungen verloren, **sofern du keine CSV exportiert hast.**  
+    - Das Programm ist darauf ausgelegt, **einfach und sicher** zu funktionieren – ideal zur quartalsweisen Abrechnung und Übersicht deiner Therapiesitzungen.
+    """)
+    
 with tabs[0]:
     st.header("Kalenderübersicht")
     st.header("Kalender")
