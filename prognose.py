@@ -813,44 +813,42 @@ with tabs[2]:
             summe_schaetzung = prognose["Schätzung (10/12)"].sum()
             summe_entgelt = prognose["Entgelt"].sum()
     
-            # Erstellen Sie ein Dictionary mit den Werten für die neue Zeile
             neue_zeile_werte = {
                 "Sitzungsart": "",
                 "Anzahl": summe_anzahl,
                 "Schätzung (10/12)": summe_schaetzung,
-                "EBM Honorar": "",  # Bleibt leer
+                "EBM Honorar": "",
                 "Entgelt": summe_entgelt
             }
             prognose.loc['Gesamt'] = neue_zeile_werte
     
             st.write(prognose)
 
-    
-    
+
 with tabs[3]:
     st.header("Supervision")
     clients = st.session_state.sitzungen["Klient"].dropna().unique()     
 
-with st.form("sup_add"):
-    sup_date = st.date_input("Datum Supervision", format="DD/MM/YYYY")
-    sup_type = st.radio("Einzel-/Gruppensupervision?", options=["E-SV", "G-SV"])
-    sup_stunden = st.number_input(
-        "Anzahl Stunden",
-        min_value=1,
-        max_value=10,
-        step=1,
-        format="%d"
-    )
-    if st.form_submit_button("Hinzufügen"):
-        sup_sitzung = pd.DataFrame({
-            "Datum": [pd.Timestamp(sup_date)],
-            "Sitzungsart": ["Supervision"],
-            "Art Supervision": [sup_type],
-            "Stundenanzahl": [sup_stunden]
-        })
-        
-        st.session_state.sitzungen = pd.concat([st.session_state.sitzungen, sup_sitzung], ignore_index=True)
-        st.rerun()
+    with st.form("sup_add"):
+        sup_date = st.date_input("Datum Supervision", format="DD/MM/YYYY")
+        sup_type = st.radio("Einzel-/Gruppensupervision?", options=["E-SV", "G-SV"])
+        sup_stunden = st.number_input(
+            "Anzahl Stunden",
+            min_value=1,
+            max_value=10,
+            step=1,
+            format="%d"
+        )
+        if st.form_submit_button("Hinzufügen"):
+            sup_sitzung = pd.DataFrame({
+                "Datum": [pd.Timestamp(sup_date)],
+                "Sitzungsart": ["Supervision"],
+                "Art Supervision": [sup_type],
+                "Stundenanzahl": [sup_stunden]
+            })
+            
+            st.session_state.sitzungen = pd.concat([st.session_state.sitzungen, sup_sitzung], ignore_index=True)
+            st.rerun()
 
     supervisionen = st.session_state.sitzungen[st.session_state.sitzungen["Sitzungsart"] == "Supervision"]
     
@@ -879,6 +877,7 @@ with st.form("sup_add"):
                 st.write(vergleich)
     else:
         st.info("Füge eine erste Supervisionssitzung hinzu, um die Supervisionsübersicht zu öffnen.")
+
 
 
 # --- POPUP-WARNUNG BEIM SCHLIEßEN DES FENSTERS ---
