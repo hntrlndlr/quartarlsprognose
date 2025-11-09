@@ -516,7 +516,7 @@ with tabs[0]:
                         st.session_state.last_button_click = None
                         st.session_state.selected_event = None
                         st.rerun()
-                abbruch_button()
+            abbruch_button()
     
         elif action == "Verschieben":
             with st.form("verschieben"):
