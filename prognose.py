@@ -192,6 +192,19 @@ def loesche_termine(date, client):
     update_klient_termine_in_session(client, klienten_termine)
     return klienten_termine
 
+def loesche_urlaub(start, ende):
+    termine = st.session_state.sitzungen.copy()
+    urlaub_start = pd.to_datetime(start)
+    urlaub_ende = pd.to_datetime(ende)
+    urlaub_termine = termine[
+        (termine["Datum"]>=urlaub_start) &
+        (termine["Datum"]<=urlaub_ende)
+    ]
+    
+    for idx, termin in urlaub_termine.iterrows():
+        loesche_termine(termin["Datum"], termin["Klient"])
+    
+
 def update_klient_termine_in_session(client, klienten_termine):
     st.session_state.sitzungen = st.session_state.sitzungen[
         st.session_state.sitzungen["Klient"] != client
@@ -539,6 +552,17 @@ with tabs[0]:
                     st.session_state.selected_event = None
                     st.rerun()
             abbruch_button()
+
+    with st.form("urlaub"):
+        st.header("Termine wegen Urlaub löschen")
+        u_start = st.date_input("Bitte gib den Urlaubsstart ein")
+        u_end = st.date_input("Bitte gib das Urlaubsende ein")
+        if st.form_submit_button("Bestätigen"):
+            loesche_urlaub(u_start,u_end)
+            st.session_state.last_button_click = None
+            st.session_state.selected_event = None
+            st.rerun()
+    abbruch_button()
 
 with tabs[1]:
     st.header("Klientenverwaltung")    
