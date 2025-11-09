@@ -766,116 +766,120 @@ with tabs[1]:
 
 with tabs[2]:
     st.header("Quartalsprognose")
-    clients = st.session_state.sitzungen["Klient"].dropna().unique()
-    if clients.size > 0:
-        with st.form("qp"):
-            options = ["extern", "intern"]
-            ext = st.radio(
-                "In externer Praxis oder im IPP?",
-                options
-            )
-            sitzung_mapping = {
-                'Sprechstunde': 46.8,
-                'Probatorik': 35.15,
-            'Anamnese': 35.05,
-                'KZT': 46.65,
-                'LZT': 46.65,
-                'RFP': 46.65,
-                'PTG': 38.2
-            }
-            
-            quartale = st.session_state.sitzungen["Datum"].dt.to_period('Q').unique()
-            quartaljahre = st.session_state.sitzungen["Datum"].dt.to_period('Q')
-            
-            element = st.selectbox("Bitte wähle das Quartal aus",
-                quartale)
-            
-            if st.form_submit_button("Bestätigen"):
-                st.subheader(element)
-                quartals_termine = st.session_state.sitzungen[quartaljahre == element]
-                quartals_termine = quartals_termine[quartals_termine["Sitzungsart"] != "Supervision"]
-                prognose = quartals_termine["Sitzungsart"].value_counts().reset_index()
-                prognose.columns = ["Sitzungsart", "Anzahl"]
-                prognose["Schätzung (10/12)"] = (prognose["Anzahl"]*10/12).round()
-                if ext == "extern":
-                    prognose['EBM Honorar'] = prognose['Sitzungsart'].map(sitzung_mapping)-3
-                else:
-                    prognose['EBM Honorar'] = prognose['Sitzungsart'].map(sitzung_mapping)
-                
-                prognose['Entgelt'] = prognose["Schätzung (10/12)"] * prognose['EBM Honorar']
-                summe_anzahl = prognose["Anzahl"].sum()
-                summe_schaetzung = prognose["Schätzung (10/12)"].sum()
-                summe_entgelt = prognose["Entgelt"].sum()
-                
-                # Erstellen Sie ein Dictionary mit den Werten für die neue Zeile
-                # Der Schlüssel ist der Spaltenname, der Wert ist der entsprechende Wert
-                neue_zeile_werte = {
-                    "Sitzungsart": "",
-                    "Anzahl": summe_anzahl,
-                    "Schätzung (10/12)": summe_schaetzung,
-                    "EBM Honorar": "",  # Bleibt leer
-                    "Entgelt": summe_entgelt
-                }
-                prognose.loc['Gesamt'] = neue_zeile_werte
-                
-                st.write(prognose)
-    else:
-        st.info("Füge zuerst einen Klienten hinzu, um die Übersicht zu sehen.") 
+    clients = st.session_state.sitzungen["Klient"].dropna().unique()  
+
+    with st.form("qp"):
+        options = ["extern", "intern"]
+        ext = st.radio(
+            "In externer Praxis oder im IPP?",
+            options
+        )
     
+        sitzung_mapping = {
+            'Sprechstunde': 46.8,
+            'Probatorik': 35.15,
+            'Anamnese': 35.05,
+            'KZT': 46.65,
+            'LZT': 46.65,
+            'RFP': 46.65,
+            'PTG': 38.2
+        }
+    
+        quartale = st.session_state.sitzungen["Datum"].dt.to_period('Q').unique()
+        quartaljahre = st.session_state.sitzungen["Datum"].dt.to_period('Q')
+    
+        element = st.selectbox(
+            "Bitte wähle das Quartal aus",
+            quartale
+        )
+    
+        if st.form_submit_button("Bestätigen"):
+            st.subheader(element)
+            quartals_termine = st.session_state.sitzungen[quartaljahre == element]
+            quartals_termine = quartals_termine[quartals_termine["Sitzungsart"] != "Supervision"]
+    
+            prognose = quartals_termine["Sitzungsart"].value_counts().reset_index()
+            prognose.columns = ["Sitzungsart", "Anzahl"]
+            prognose["Schätzung (10/12)"] = (prognose["Anzahl"] * 10 / 12).round()
+    
+            if ext == "extern":
+                prognose['EBM Honorar'] = prognose['Sitzungsart'].map(sitzung_mapping) - 3
+            else:
+                prognose['EBM Honorar'] = prognose['Sitzungsart'].map(sitzung_mapping)
+    
+            prognose['Entgelt'] = prognose["Schätzung (10/12)"] * prognose['EBM Honorar']
+    
+            summe_anzahl = prognose["Anzahl"].sum()
+            summe_schaetzung = prognose["Schätzung (10/12)"].sum()
+            summe_entgelt = prognose["Entgelt"].sum()
+    
+            # Erstellen Sie ein Dictionary mit den Werten für die neue Zeile
+            neue_zeile_werte = {
+                "Sitzungsart": "",
+                "Anzahl": summe_anzahl,
+                "Schätzung (10/12)": summe_schaetzung,
+                "EBM Honorar": "",  # Bleibt leer
+                "Entgelt": summe_entgelt
+            }
+            prognose.loc['Gesamt'] = neue_zeile_werte
+    
+            st.write(prognose)
+
     
     
 with tabs[3]:
     st.header("Supervision")
-    clients = st.session_state.sitzungen["Klient"].dropna().unique()
-    if clients.size > 0:
-        with st.form("sup_add"):
-            sup_date = st.date_input("Datum Supervision", format="DD/MM/YYYY")
-            sup_type = st.radio("Einzel-/Gruppensupervision?", options=["E-SV", "G-SV"])
-            sup_stunden = st.number_input(
-                "Anzahl Stunden",
-                min_value = 1,
-                max_value = 10,
-                step = 1,
-                format = "%d"
-            )
-            if st.form_submit_button("Hinzufügen"):
-                sup_sitzung = pd.DataFrame({
-                    "Datum": [pd.Timestamp(sup_date)],
-                    "Sitzungsart": ["Supervision"],
-                    "Art Supervision": [sup_type],
-                    "Stundenanzahl": [sup_stunden]
-                })
-                
-                st.session_state.sitzungen = pd.concat([st.session_state.sitzungen,sup_sitzung], ignore_index = True)
-                st.rerun()
-        supervisionen = st.session_state.sitzungen[st.session_state.sitzungen["Sitzungsart"] == "Supervision"]
-        if supervisionen.size>0:
-            st.subheader("Supervisionsübersicht (IST vs SOLL)")
-            with st.form("sup_ov"):
-                due_day = st.date_input("Bitte wähle einen Stichtag aus.", format="DD/MM/YYYY")
-                if st.form_submit_button("Bestätigen"):
-                    subset = st.session_state.sitzungen[st.session_state.sitzungen["Datum"]<pd.Timestamp(due_day)]
-                    subset_sitzungen = subset[subset["Sitzungsart"]!="Supervision"].shape[0]
-                    subset_sup = subset[subset["Sitzungsart"]=="Supervision"]
+    clients = st.session_state.sitzungen["Klient"].dropna().unique()     
 
-                    st.write(f"Bis zum {due_day} wurden/werden {subset_sitzungen} Sitzungen Psychotherapie absolviert. Daraus ergibt sich der folgende Superivisionsbedarf.")
-                    vergleich = pd.DataFrame(columns=["SOLL", "IST", "Differenz"], index = ["Gesamt-SUP", "E-SV", "G-SV"])
-                    vergleich["SOLL"] = [subset_sitzungen/4, subset_sitzungen/12, subset_sitzungen/6]
-                    vergleich["SOLL"] = vergleich["SOLL"].round(1)
-                    
-                    vergleich["IST"] = [
-                        subset_sup["Stundenanzahl"].sum(),
-                        subset_sup[subset_sup["Art Supervision"] == "E-SV"]["Stundenanzahl"].sum(),
-                        subset_sup[subset_sup["Art Supervision"] == "G-SV"]["Stundenanzahl"].sum()
-                    ]
-                    
-                    vergleich["Differenz"] = vergleich["IST"]-vergleich["SOLL"]
-                    st.write(vergleich)
-        else:
-            st.info("Füge eine erste Supervisionssitzung hinzu, um die Supervisionsübersicht zu öffnen.")       
-           
+with st.form("sup_add"):
+    sup_date = st.date_input("Datum Supervision", format="DD/MM/YYYY")
+    sup_type = st.radio("Einzel-/Gruppensupervision?", options=["E-SV", "G-SV"])
+    sup_stunden = st.number_input(
+        "Anzahl Stunden",
+        min_value=1,
+        max_value=10,
+        step=1,
+        format="%d"
+    )
+    if st.form_submit_button("Hinzufügen"):
+        sup_sitzung = pd.DataFrame({
+            "Datum": [pd.Timestamp(sup_date)],
+            "Sitzungsart": ["Supervision"],
+            "Art Supervision": [sup_type],
+            "Stundenanzahl": [sup_stunden]
+        })
+        
+        st.session_state.sitzungen = pd.concat([st.session_state.sitzungen, sup_sitzung], ignore_index=True)
+        st.rerun()
+
+    supervisionen = st.session_state.sitzungen[st.session_state.sitzungen["Sitzungsart"] == "Supervision"]
+    
+    if supervisionen.size > 0:
+        st.subheader("Supervisionsübersicht (IST vs SOLL)")
+        with st.form("sup_ov"):
+            due_day = st.date_input("Bitte wähle einen Stichtag aus.", format="DD/MM/YYYY")
+            if st.form_submit_button("Bestätigen"):
+                subset = st.session_state.sitzungen[st.session_state.sitzungen["Datum"] < pd.Timestamp(due_day)]
+                subset_sitzungen = subset[subset["Sitzungsart"] != "Supervision"].shape[0]
+                subset_sup = subset[subset["Sitzungsart"] == "Supervision"]
+    
+                st.write(f"Bis zum {due_day} wurden/werden {subset_sitzungen} Sitzungen Psychotherapie absolviert. Daraus ergibt sich der folgende Supervisionsbedarf.")
+    
+                vergleich = pd.DataFrame(columns=["SOLL", "IST", "Differenz"], index=["Gesamt-SUP", "E-SV", "G-SV"])
+                vergleich["SOLL"] = [subset_sitzungen / 4, subset_sitzungen / 12, subset_sitzungen / 6]
+                vergleich["SOLL"] = vergleich["SOLL"].round(1)
+    
+                vergleich["IST"] = [
+                    subset_sup["Stundenanzahl"].sum(),
+                    subset_sup[subset_sup["Art Supervision"] == "E-SV"]["Stundenanzahl"].sum(),
+                    subset_sup[subset_sup["Art Supervision"] == "G-SV"]["Stundenanzahl"].sum()
+                ]
+    
+                vergleich["Differenz"] = vergleich["IST"] - vergleich["SOLL"]
+                st.write(vergleich)
     else:
-        st.info("Füge zuerst einen Klienten hinzu, um die Übersicht zu sehen.")
+        st.info("Füge eine erste Supervisionssitzung hinzu, um die Supervisionsübersicht zu öffnen.")
+
 
 # --- POPUP-WARNUNG BEIM SCHLIEßEN DES FENSTERS ---
 components.html(
