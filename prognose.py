@@ -280,7 +280,12 @@ def wochentag_auswahl():
     ausgewaehlte_zahl = wochentage[ausgewaehlter_name]
     
     return ausgewaehlte_zahl
-   
+
+def abbruch_button():
+    if st.button("Abbrechen"):
+        st.session_state.last_button_click = None
+        st.session_state.selected_event = None
+        st.rerun()
 
 # --- STREAMLIT ANWENDUNG ---
 
@@ -481,10 +486,7 @@ with tabs[0]:
                     st.session_state.selected_event = None
                     st.rerun()
     
-            if st.button("Abbrechen"):
-                st.session_state.last_button_click = None
-                st.session_state.selected_event = None
-                st.rerun()
+            abbruch_button()
     
         elif action == "Terminausfall":
             with st.form("terminausfall"):
@@ -495,6 +497,7 @@ with tabs[0]:
                     st.session_state.last_button_click = None
                     st.session_state.selected_event = None
                     st.rerun()
+            abbruch_button()
     
         elif action == "PTG":
             with st.form("ptg"):
@@ -513,6 +516,7 @@ with tabs[0]:
                         st.session_state.last_button_click = None
                         st.session_state.selected_event = None
                         st.rerun()
+                abbruch_button()
     
         elif action == "Verschieben":
             with st.form("verschieben"):
@@ -523,6 +527,7 @@ with tabs[0]:
                     st.session_state.last_button_click = None
                     st.session_state.selected_event = None
                     st.rerun()
+            abbruch_button()
     
         elif action == "Ende":
             with st.form("ende"):
@@ -533,10 +538,7 @@ with tabs[0]:
                     st.session_state.last_button_click = None
                     st.session_state.selected_event = None
                     st.rerun()
-
-    
-
-
+            abbruch_button()
 
 with tabs[1]:
     st.header("Klientenverwaltung")    
@@ -678,6 +680,7 @@ with tabs[1]:
                         add_sessions_callback("Probatorik")
                         st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
+                abbruch_button()
             
             elif st.session_state.last_button_click == "KZT":
                 with st.form("kzt_eingabe"):
@@ -691,6 +694,7 @@ with tabs[1]:
                         add_sessions_callback("KZT", start_kzt)
                         st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
+                abbruch_button()
             
             elif st.session_state.last_button_click == "LZT":
                 with st.form("lzt_eingabe"):
@@ -704,6 +708,7 @@ with tabs[1]:
                         add_sessions_callback("LZT", start_lzt)
                         st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
+                abbruch_button()
             
             elif st.session_state.last_button_click == "RFP":
                 with st.form("rfp_eingabe"):
@@ -717,6 +722,7 @@ with tabs[1]:
                         add_sessions_callback("RFP", start_rfp)
                         st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
+                abbruch_button()
             
             elif st.session_state.last_button_click == "Umwandlung":
                 with st.form("umwandlung_eingabe"):
@@ -729,6 +735,7 @@ with tabs[1]:
                         convert_kzt_to_lzt_callback(start_umwandlung)
                         st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
+                abbruch_button()
     
     else:
         st.info("Füge zuerst einen Klienten hinzu, um die Übersicht zu sehen.")
