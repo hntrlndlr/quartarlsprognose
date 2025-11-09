@@ -445,25 +445,30 @@ with tabs[0]:
         title = event_obj["title"]
         start = event_obj["start"]
     
-        if "E-SV" in title or "G-SV" in title:
-            if st.session_state.get("last_button_click") is None:
-                st.header(f"{title} am {start}")
-                if st.button("Supervisionstermin löschen"):
-                    st.session_state.last_button_click = "sup_loeschen"
-                    
-                if st.session_state.get("last_button_click") == "sup_loeschen":
-                    with st.form("sup_loeschen"):
-                        st.subheader("Supervisionstermin löschen")
-                        st.warning("Dieser Supervisionstermin wird gelöscht!")
-                        if st.form_submit_button("Bestätigen"):
-                            loesche_sup_termin(start, title)
-                            st.session_state.last_button_click = None
-                            st.session_state.selected_event = None
-                            st.rerun()
-                        elif st.form_submit_button("Abbrechen"):
-                            st.session_state.last_button_click = None
-                            st.session_state.selected_event = None
-                            st.rerun()
+    if "E-SV" in title or "G-SV" in title:
+        if st.session_state.get("last_button_click") is None:
+            st.header(f"{title} am {start}")
+            if st.button("Supervisionstermin löschen"):
+                st.session_state.last_button_click = "sup_loeschen"
+    
+        if st.session_state.get("last_button_click") == "sup_loeschen":
+            st.subheader("Supervisionstermin löschen")
+            st.warning("Dieser Supervisionstermin wird gelöscht!")
+    
+            # Formular nur für den Bestätigen-Button
+            with st.form("sup_loeschen_form"):
+                confirm = st.form_submit_button("Bestätigen")
+                if confirm:
+                    loesche_sup_termin(start, title)
+                    st.session_state.last_button_click = None
+                    st.session_state.selected_event = None
+                    st.rerun()
+    
+            # Abbrechen außerhalb des Formulars
+            if st.button("Abbrechen"):
+                st.session_state.last_button_click = None
+                st.session_state.selected_event = None
+                st.rerun()
         else:
             klient_id = title.split(" - ")[0].strip()
     
