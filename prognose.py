@@ -456,9 +456,9 @@ with tabs[0]:
                     st.session_state.last_button_click = None
                     st.session_state.selected_event = None
                     st.rerun()
-                if st.form_submit_button("Abbrechen"):
-                    st.session_state.last_button_click = None
-                    st.rerun()
+            if st.button("Abbrechen"):
+                st.session_state.last_button_click = None
+                st.rerun()
         else:
             klient_id = title.split(" - ")[0].strip()
     
