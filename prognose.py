@@ -553,16 +553,16 @@ with tabs[0]:
                     st.rerun()
             abbruch_button()
 
-    with st.form("urlaub"):
-        st.header("Termine wegen Urlaub löschen")
-        u_start = st.date_input("Bitte gib den Urlaubsstart ein")
-        u_end = st.date_input("Bitte gib das Urlaubsende ein")
-        if st.form_submit_button("Bestätigen"):
-            loesche_urlaub(u_start,u_end)
-            st.session_state.last_button_click = None
-            st.session_state.selected_event = None
-            st.rerun()
-    abbruch_button()
+#    with st.form("urlaub"):
+#        st.header("Termine wegen Urlaub löschen")
+#        u_start = st.date_input("Bitte gib den Urlaubsstart ein")
+#        u_end = st.date_input("Bitte gib das Urlaubsende ein")
+#        if st.form_submit_button("Bestätigen"):
+#            loesche_urlaub(u_start,u_end)
+#            st.session_state.last_button_click = None
+#            st.session_state.selected_event = None
+#            st.rerun()
+#    abbruch_button()
 
 with tabs[1]:
     st.header("Klientenverwaltung")    
