@@ -446,10 +446,9 @@ with tabs[0]:
         start = event_obj["start"]
     
     if "E-SV" in title or "G-SV" in title:
-        if st.session_state.get("last_button_click") is None:
-            st.header(f"{title} am {start}")
-            if st.button("Supervisionstermin löschen"):
-                st.session_state.last_button_click = "sup_loeschen"
+        st.header(f"{title} am {start}")
+        if st.button("Supervisionstermin löschen"):
+            st.session_state.last_button_click = "sup_loeschen"
     
         if st.session_state.get("last_button_click") == "sup_loeschen":
             st.subheader("Supervisionstermin löschen")
