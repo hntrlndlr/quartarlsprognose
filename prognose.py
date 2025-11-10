@@ -580,11 +580,15 @@ with tabs[0]:
             
 with tabs[1]:
     st.header("Urlaubsverwaltung")
+
     clients = st.session_state.sitzungen["Klient"].dropna().unique()
+    
     if clients.size > 0:
         valid_clients = [c for c in clients if c]
+
         with st.form("urlaub"):
-            st.header("Termine wegen Urlaub löschen")
+            st.subheader("Termine wegen Urlaub verschieben")
+
             u_start = st.date_input("Bitte gib den Urlaubsstart ein")
             u_end = st.date_input("Bitte gib das Urlaubsende ein")
             u_klient = st.selectbox(
@@ -592,14 +596,24 @@ with tabs[1]:
                 ["Alle"] + valid_clients, 
                 key="auswahl_klient_box_urlaub"
             )
-            if st.form_submit_button("Bestätigen"):
-                urlaub_termine = loesche_urlaub(u_start,u_end, u_klient)
-                st.session_state.last_button_click = None
-                st.session_state.selected_event = None
-                st.success("Die folgenden Termien wurden verschoben:")
-                st.success(urlaub_termine)
-                st.rerun()
+
+            submitted = st.form_submit_button("Bestätigen")
+        
+        if submitted:
+            # Termine verschieben
+            urlaub_termine = loesche_urlaub(u_start, u_end, u_klient)
+
+            # Erfolgsmeldung mit Zeilenumbruch
+            st.success("Die folgenden Termine wurden erfolgreich verschoben:")
+
+            # Zeige die verschobenen Termine als Tabelle
+            if not urlaub_termine.empty:
+                st.dataframe(urlaub_termine)
+            else:
+                st.info("Keine Termine für den gewählten Zeitraum gefunden.")
+
         abbruch_button()
+        
     else:
         st.info("Füge einen Klienten hinzu, um Abwesenheiten zu verwalten")
 
