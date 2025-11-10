@@ -563,6 +563,8 @@ with tabs[1]:
         st.header("Termine wegen Urlaub löschen")
         u_start = st.date_input("Bitte gib den Urlaubsstart ein")
         u_end = st.date_input("Bitte gib das Urlaubsende ein")
+        clients = st.session_state.sitzungen["Klient"].dropna().unique()
+        valid_clients = [c for c in clients if c] 
         client_list = valid_clients.append("Alle")
         u_klient = st.selectbox(
             "Wähle einen Klienten aus", 
