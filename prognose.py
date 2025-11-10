@@ -823,62 +823,64 @@ with tabs[3]:
     st.header("Quartalsprognose")
     clients = st.session_state.sitzungen["Klient"].dropna().unique()  
 
-    with st.form("qp"):
-        options = ["extern", "intern"]
-        ext = st.radio(
-            "In externer Praxis oder im IPP?",
-            options
-        )
-    
-        sitzung_mapping = {
-            'Sprechstunde': 46.8,
-            'Probatorik': 35.15,
-            'Anamnese': 35.05,
-            'KZT': 46.65,
-            'LZT': 46.65,
-            'RFP': 46.65,
-            'PTG': 38.2
-        }
-    
-        quartale = st.session_state.sitzungen["Datum"].dt.to_period('Q').unique()
-        quartaljahre = st.session_state.sitzungen["Datum"].dt.to_period('Q')
-    
-        element = st.selectbox(
-            "Bitte wähle das Quartal aus",
-            quartale
-        )
-    
-        if st.form_submit_button("Bestätigen"):
-            st.subheader(element)
-            quartals_termine = st.session_state.sitzungen[quartaljahre == element]
-            quartals_termine = quartals_termine[quartals_termine["Sitzungsart"] != "Supervision"]
-    
-            prognose = quartals_termine["Sitzungsart"].value_counts().reset_index()
-            prognose.columns = ["Sitzungsart", "Anzahl"]
-            prognose["Schätzung (10/12)"] = (prognose["Anzahl"] * 10 / 12).round()
-    
-            if ext == "extern":
-                prognose['EBM Honorar'] = prognose['Sitzungsart'].map(sitzung_mapping) - 3
-            else:
-                prognose['EBM Honorar'] = prognose['Sitzungsart'].map(sitzung_mapping)
-    
-            prognose['Entgelt'] = prognose["Schätzung (10/12)"] * prognose['EBM Honorar']
-    
-            summe_anzahl = prognose["Anzahl"].sum()
-            summe_schaetzung = prognose["Schätzung (10/12)"].sum()
-            summe_entgelt = prognose["Entgelt"].sum()
-    
-            neue_zeile_werte = {
-                "Sitzungsart": "",
-                "Anzahl": summe_anzahl,
-                "Schätzung (10/12)": summe_schaetzung,
-                "EBM Honorar": "",
-                "Entgelt": summe_entgelt
+    if clients.size > 0:
+        with st.form("qp"):
+            options = ["extern", "intern"]
+            ext = st.radio(
+                "In externer Praxis oder im IPP?",
+                options
+            )
+        
+            sitzung_mapping = {
+                'Sprechstunde': 46.8,
+                'Probatorik': 35.15,
+                'Anamnese': 35.05,
+                'KZT': 46.65,
+                'LZT': 46.65,
+                'RFP': 46.65,
+                'PTG': 38.2
             }
-            prognose.loc['Gesamt'] = neue_zeile_werte
-    
-            st.write(prognose)
-
+        
+            quartale = st.session_state.sitzungen["Datum"].dt.to_period('Q').unique()
+            quartaljahre = st.session_state.sitzungen["Datum"].dt.to_period('Q')
+        
+            element = st.selectbox(
+                "Bitte wähle das Quartal aus",
+                quartale
+            )
+        
+            if st.form_submit_button("Bestätigen"):
+                st.subheader(element)
+                quartals_termine = st.session_state.sitzungen[quartaljahre == element]
+                quartals_termine = quartals_termine[quartals_termine["Sitzungsart"] != "Supervision"]
+        
+                prognose = quartals_termine["Sitzungsart"].value_counts().reset_index()
+                prognose.columns = ["Sitzungsart", "Anzahl"]
+                prognose["Schätzung (10/12)"] = (prognose["Anzahl"] * 10 / 12).round()
+        
+                if ext == "extern":
+                    prognose['EBM Honorar'] = prognose['Sitzungsart'].map(sitzung_mapping) - 3
+                else:
+                    prognose['EBM Honorar'] = prognose['Sitzungsart'].map(sitzung_mapping)
+        
+                prognose['Entgelt'] = prognose["Schätzung (10/12)"] * prognose['EBM Honorar']
+        
+                summe_anzahl = prognose["Anzahl"].sum()
+                summe_schaetzung = prognose["Schätzung (10/12)"].sum()
+                summe_entgelt = prognose["Entgelt"].sum()
+        
+                neue_zeile_werte = {
+                    "Sitzungsart": "",
+                    "Anzahl": summe_anzahl,
+                    "Schätzung (10/12)": summe_schaetzung,
+                    "EBM Honorar": "",
+                    "Entgelt": summe_entgelt
+                }
+                prognose.loc['Gesamt'] = neue_zeile_werte
+        
+                st.write(prognose)
+    else: 
+        st.info("Füge zuerst einen Klienten hinzu, um die Quartalsprognose zu bestimmen")
 
 with tabs[4]:
     st.header("Supervision")
