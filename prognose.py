@@ -596,10 +596,10 @@ with tabs[1]:
                 urlaub_termine = loesche_urlaub(u_start,u_end, u_klient)
                 st.session_state.last_button_click = None
                 st.session_state.selected_event = None
+                st.success("Die folgenden Termien wurden verschoben:")
+                st.success(urlaub_termine)
                 st.rerun()
         abbruch_button()
-        st.info("Die folgenden Termine wurden verschoben:")
-        st.write(urlaub_termine)
     else:
         st.info("Füge einen Klienten hinzu, um Abwesenheiten zu verwalten")
 
