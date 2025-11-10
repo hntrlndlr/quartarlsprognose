@@ -594,11 +594,11 @@ with tabs[1]:
             )
             if st.form_submit_button("Bestätigen"):
                 urlaub_termine = loesche_urlaub(u_start,u_end, u_klient)
-                st.info("Die folgenden Termine wurden verschoben:")
-                st.write(urlaub_termine)
                 st.session_state.last_button_click = None
                 st.session_state.selected_event = None
                 st.rerun()
+                st.info("Die folgenden Termine wurden verschoben:")
+                st.write(urlaub_termine)
         abbruch_button()
     else:
         st.info("Füge einen Klienten hinzu, um Abwesenheiten zu verwalten")
