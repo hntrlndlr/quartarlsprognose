@@ -572,7 +572,7 @@ with tabs[1]:
                 key="auswahl_klient_box_urlaub"
             )
             if st.form_submit_button("Bestätigen"):
-                loesche_urlaub(u_start,u_end)
+                loesche_urlaub(u_start,u_end, u_klient)
                 st.session_state.last_button_click = None
                 st.session_state.selected_event = None
                 st.rerun()
