@@ -206,8 +206,8 @@ def loesche_urlaub(start, ende, klient):
         (termine["Datum"]<=urlaub_ende)
     ]
     
-    for idx, termin in urlaub_termine.iterrows():
-        loesche_termine(termin["Datum"], termin["Klient"])
+    for index, row in urlaub_termine.iterrows():
+        loesche_termine(row["Datum"], row["Klient"])
 
 def update_klient_termine_in_session(client, klienten_termine):
     st.session_state.sitzungen = st.session_state.sitzungen[
@@ -372,9 +372,9 @@ with st.sidebar:
 
 
 
-tabs = st.tabs(["Kalender", "Klientenverwaltung", "Quartalsprognose", "Supervision", "Anleitung"])
+tabs = st.tabs(["Kalender", "Abwesenheiten", "Klientenverwaltung", "Quartalsprognose", "Supervision", "Anleitung"])
 
-with tabs[4]:
+with tabs[5]:
     st.markdown("""
     ## Anleitung zur Nutzung des Programms
 
@@ -556,19 +556,27 @@ with tabs[0]:
                     st.session_state.selected_event = None
                     st.rerun()
             abbruch_button()
-
-#    with st.form("urlaub"):
-#        st.header("Termine wegen Urlaub löschen")
-#        u_start = st.date_input("Bitte gib den Urlaubsstart ein")
-#        u_end = st.date_input("Bitte gib das Urlaubsende ein")
-#        if st.form_submit_button("Bestätigen"):
-#            loesche_urlaub(u_start,u_end)
-#            st.session_state.last_button_click = None
-#            st.session_state.selected_event = None
-#            st.rerun()
-#    abbruch_button()
-
+            
 with tabs[1]:
+    st.header("Urlaubsverwaltung")
+    with st.form("urlaub"):
+        st.header("Termine wegen Urlaub löschen")
+        u_start = st.date_input("Bitte gib den Urlaubsstart ein")
+        u_end = st.date_input("Bitte gib das Urlaubsende ein")
+        u_klient = st.selectbox(
+            "Wähle einen Klienten aus", 
+            [""] + valid_clients.append("Alle"), 
+            key="auswahl_klient_box", 
+            on_change=select_client_callback
+        )
+        if st.form_submit_button("Bestätigen"):
+            loesche_urlaub(u_start,u_end)
+            st.session_state.last_button_click = None
+            st.session_state.selected_event = None
+            st.rerun()
+    abbruch_button()
+
+with tabs[2]:
     st.header("Klientenverwaltung")    
     st.subheader("Neuen Klienten hinzufügen")
     with st.form("eingabemaske_klient"):
@@ -768,7 +776,7 @@ with tabs[1]:
     else:
         st.info("Füge zuerst einen Klienten hinzu, um die Übersicht zu sehen.")
 
-with tabs[2]:
+with tabs[3]:
     st.header("Quartalsprognose")
     clients = st.session_state.sitzungen["Klient"].dropna().unique()  
 
@@ -829,7 +837,7 @@ with tabs[2]:
             st.write(prognose)
 
 
-with tabs[3]:
+with tabs[4]:
     st.header("Supervision")
     clients = st.session_state.sitzungen["Klient"].dropna().unique()     
 
