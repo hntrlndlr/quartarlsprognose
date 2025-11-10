@@ -192,10 +192,15 @@ def loesche_termine(date, client):
     update_klient_termine_in_session(client, klienten_termine)
     return klienten_termine
 
-def loesche_urlaub(start, ende):
+def loesche_urlaub(start, ende, klient):
     termine = st.session_state.sitzungen.copy()
+    termine = termine[termine["Sitzungsart"]!="Supervision"]
+    if klient != "alle":
+        termine = termine[termine["Klient"]==klient]
+        
     urlaub_start = pd.to_datetime(start)
     urlaub_ende = pd.to_datetime(ende)
+    
     urlaub_termine = termine[
         (termine["Datum"]>=urlaub_start) &
         (termine["Datum"]<=urlaub_ende)
@@ -203,7 +208,6 @@ def loesche_urlaub(start, ende):
     
     for idx, termin in urlaub_termine.iterrows():
         loesche_termine(termin["Datum"], termin["Klient"])
-    
 
 def update_klient_termine_in_session(client, klienten_termine):
     st.session_state.sitzungen = st.session_state.sitzungen[
