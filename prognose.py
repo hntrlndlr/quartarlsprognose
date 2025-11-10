@@ -226,7 +226,7 @@ def loesche_urlaub(start, ende, klient):
     ]
     
     for _, row in urlaub_termine.iterrows():
-        loesche_termine(row["Datum"], row["Klient"])
+        verschiebe_termine_callback(row["Datum"], row["Klient"])
 
 def update_klient_termine_in_session(client, klienten_termine):
     st.session_state.sitzungen = st.session_state.sitzungen[
