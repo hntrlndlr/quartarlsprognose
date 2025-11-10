@@ -612,6 +612,9 @@ with tabs[1]:
             else:
                 st.info("Keine Termine für den gewählten Zeitraum gefunden.")
 
+            if st.button("OK, aktualisieren"):
+                st.rerun()
+
         abbruch_button()
         
     else:
