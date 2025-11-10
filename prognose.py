@@ -563,9 +563,10 @@ with tabs[1]:
         st.header("Termine wegen Urlaub löschen")
         u_start = st.date_input("Bitte gib den Urlaubsstart ein")
         u_end = st.date_input("Bitte gib das Urlaubsende ein")
+        client_list = valid_clients.append("Alle")
         u_klient = st.selectbox(
             "Wähle einen Klienten aus", 
-            [""] + valid_clients.append("Alle"), 
+            [""] + client_list, 
             key="auswahl_klient_box", 
             on_change=select_client_callback
         )
