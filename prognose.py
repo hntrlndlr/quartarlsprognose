@@ -603,11 +603,10 @@ with tabs[1]:
             # Termine verschieben
             urlaub_termine = loesche_urlaub(u_start, u_end, u_klient)
 
-            # Erfolgsmeldung mit Zeilenumbruch
-            st.success("Die folgenden Termine wurden erfolgreich verschoben:")
-
             # Zeige die verschobenen Termine als Tabelle
             if not urlaub_termine.empty:
+                # Erfolgsmeldung mit Zeilenumbruch
+                st.success("Die folgenden Termine wurden erfolgreich verschoben:")
                 st.dataframe(urlaub_termine)
             else:
                 st.info("Keine Termine für den gewählten Zeitraum gefunden.")
