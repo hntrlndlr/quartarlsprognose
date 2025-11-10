@@ -219,17 +219,13 @@ def loesche_urlaub(start, ende, klient):
         
     urlaub_start = pd.to_datetime(start)
     urlaub_ende = pd.to_datetime(ende)
-
-    st.write(urlaub_termine)
     
     urlaub_termine = termine[
         (termine["Datum"]>=urlaub_start) &
         (termine["Datum"]<=urlaub_ende)
     ]
-
-    st.write(urlaub_termine)
     
-    for index, row in urlaub_termine.iterrows():
+    for _, row in urlaub_termine.iterrows():
         loesche_termine(row["Datum"], row["Klient"])
 
 def update_klient_termine_in_session(client, klienten_termine):
