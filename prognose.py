@@ -227,9 +227,8 @@ def loesche_urlaub(start, ende, klient):
     
     for _, row in urlaub_termine.iterrows():
         verschiebe_termin_callback(row["Datum"], row["Klient"])
-
-    st.info("Die folgenden Termine wurden verschoben:")
-    st.write(urlaub_termine)
+    
+    return urlaub_termine
     
 def update_klient_termine_in_session(client, klienten_termine):
     st.session_state.sitzungen = st.session_state.sitzungen[
@@ -594,7 +593,9 @@ with tabs[1]:
                 key="auswahl_klient_box_urlaub"
             )
             if st.form_submit_button("Bestätigen"):
-                loesche_urlaub(u_start,u_end, u_klient)
+                urlaub_termine = loesche_urlaub(u_start,u_end, u_klient)
+                st.info("Die folgenden Termine wurden verschoben:")
+                st.write(urlaub_termine)
                 st.session_state.last_button_click = None
                 st.session_state.selected_event = None
                 st.rerun()
