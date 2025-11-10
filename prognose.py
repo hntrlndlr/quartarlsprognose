@@ -569,8 +569,7 @@ with tabs[1]:
             u_klient = st.selectbox(
                 "Wähle einen Klienten aus", 
                 ["Alle"] + valid_clients, 
-                key="auswahl_klient_box_urlaub", 
-                on_change=select_client_callback
+                key="auswahl_klient_box_urlaub"
             )
             if st.form_submit_button("Bestätigen"):
                 loesche_urlaub(u_start,u_end)
