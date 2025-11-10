@@ -560,7 +560,7 @@ with tabs[0]:
 with tabs[1]:
     st.header("Urlaubsverwaltung")
     clients = st.session_state.sitzungen["Klient"].dropna().unique()
-    if clients > 0:
+    if clients.size > 0:
         valid_clients = [c for c in clients if c]
         with st.form("urlaub"):
             st.header("Termine wegen Urlaub löschen")
