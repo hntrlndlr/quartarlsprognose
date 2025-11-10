@@ -559,25 +559,27 @@ with tabs[0]:
             
 with tabs[1]:
     st.header("Urlaubsverwaltung")
-    with st.form("urlaub"):
-        st.header("Termine wegen Urlaub löschen")
-        u_start = st.date_input("Bitte gib den Urlaubsstart ein")
-        u_end = st.date_input("Bitte gib das Urlaubsende ein")
-        clients = st.session_state.sitzungen["Klient"].dropna().unique()
-        valid_clients = [c for c in clients if c] 
-        client_list = valid_clients.append("Alle")
-        u_klient = st.selectbox(
-            "Wähle einen Klienten aus", 
-            [""] + client_list, 
-            key="auswahl_klient_box", 
-            on_change=select_client_callback
-        )
-        if st.form_submit_button("Bestätigen"):
-            loesche_urlaub(u_start,u_end)
-            st.session_state.last_button_click = None
-            st.session_state.selected_event = None
-            st.rerun()
-    abbruch_button()
+    clients = st.session_state.sitzungen["Klient"].dropna().unique()
+    if clients > 0:
+        valid_clients = [c for c in clients if c]
+        with st.form("urlaub"):
+            st.header("Termine wegen Urlaub löschen")
+            u_start = st.date_input("Bitte gib den Urlaubsstart ein")
+            u_end = st.date_input("Bitte gib das Urlaubsende ein")
+            u_klient = st.selectbox(
+                "Wähle einen Klienten aus", 
+                ["Alle"] + valid_clients, 
+                key="auswahl_klient_box", 
+                on_change=select_client_callback
+            )
+            if st.form_submit_button("Bestätigen"):
+                loesche_urlaub(u_start,u_end)
+                st.session_state.last_button_click = None
+                st.session_state.selected_event = None
+                st.rerun()
+        abbruch_button()
+    else:
+        st.info("Füge einen Klienten hinzu, um Abwesenheiten zu verwalten")
 
 with tabs[2]:
     st.header("Klientenverwaltung")    
