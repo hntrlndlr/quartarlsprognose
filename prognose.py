@@ -214,7 +214,7 @@ def loesche_termine(date, client):
 def loesche_urlaub(start, ende, klient):
     termine = st.session_state.sitzungen.copy()
     termine = termine[termine["Sitzungsart"]!="Supervision"]
-    if klient != "alle":
+    if klient != "Alle":
         termine = termine[termine["Klient"]==klient]
         
     urlaub_start = pd.to_datetime(start)
