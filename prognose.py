@@ -228,6 +228,9 @@ def loesche_urlaub(start, ende, klient):
     for _, row in urlaub_termine.iterrows():
         verschiebe_termin_callback(row["Datum"], row["Klient"])
 
+    st.info("Die folgenden Termine wurden gelöscht:")
+    st.write(urlaub_termine)
+    
 def update_klient_termine_in_session(client, klienten_termine):
     st.session_state.sitzungen = st.session_state.sitzungen[
         st.session_state.sitzungen["Klient"] != client
