@@ -597,9 +597,9 @@ with tabs[1]:
                 st.session_state.last_button_click = None
                 st.session_state.selected_event = None
                 st.rerun()
-                st.info("Die folgenden Termine wurden verschoben:")
-                st.write(urlaub_termine)
         abbruch_button()
+        st.info("Die folgenden Termine wurden verschoben:")
+        st.write(urlaub_termine)
     else:
         st.info("Füge einen Klienten hinzu, um Abwesenheiten zu verwalten")
 
