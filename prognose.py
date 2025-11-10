@@ -119,8 +119,18 @@ def convert_kzt_to_lzt_callback(start_kzt_nr):
 def get_index(termine, date):
     termine = termine.reset_index(drop=True)
     date = pd.to_datetime(date)
-    idx = termine[termine["Datum"] == date].index[0]
-    return idx
+    
+    # Datumsspalte sicher in datetime konvertieren (nur einmal)
+    termine["Datum"] = pd.to_datetime(termine["Datum"])
+    
+    # Robust vergleichen: nur Datumsteil, nicht Uhrzeit
+    matching_rows = termine[termine["Datum"].dt.date == date.date()]
+    
+    if matching_rows.empty:
+        print(f"Kein Termin gefunden für Datum {date} – übersprungen.")
+        return None
+    
+    return matching_rows.index[0]
 
 def hole_klienten_termine(klient):
     klienten_termine = st.session_state.sitzungen[st.session_state.sitzungen["Klient"] == klient].reset_index(drop=True)
@@ -132,6 +142,9 @@ def verschiebe_termin_callback(date, client):
     
     idx = get_index(klienten_termine, date)
     
+    if idx is None:
+        return klienten_termine  # nichts zu löschen
+        
     last_date = klienten_termine["Datum"].max()
     neue_daten = klienten_termine["Datum"].tolist()
     neue_daten.append(last_date + timedelta(days=7))
@@ -168,6 +181,9 @@ def markiere_ptg(date, client):
     date = pd.to_datetime(date)
     n_ptg = count_value_in_quarter(klienten_termine, date, "Sitzungsart", "PTG") + 1
     idx = get_index(klienten_termine, date)
+
+    if idx is None:
+        return klienten_termine  # nichts zu löschen
     
     last_date = klienten_termine["Datum"].max()
     neue_daten = klienten_termine["Datum"].tolist()
@@ -187,6 +203,9 @@ def loesche_termine(date, client):
     
     date = pd.to_datetime(date)
     idx = get_index(klienten_termine, date)
+
+    if idx is None:
+        return klienten_termine  # nichts zu löschen
     
     klienten_termine = klienten_termine[:idx]
     update_klient_termine_in_session(client, klienten_termine)
