@@ -397,61 +397,95 @@ tabs = st.tabs(["Kalender", "Abwesenheiten", "Klientenverwaltung", "Quartalsprog
 
 with tabs[5]:
     st.markdown("""
-    ## Anleitung zur Nutzung des Programms
-
-    Dieses Programm dient der Verwaltung, Übersicht und Prognose psychotherapeutischer Sitzungen.  
-    Es ist so aufgebaut, dass alle wichtigen Arbeitsschritte in einer klaren Reihenfolge durchlaufen werden können.
-
-    ---
-
-    ### 1. Daten starten oder hochladen
-    - Beim Start kannst du entscheiden, ob du **eine bestehende CSV-Datei** mit Sitzungsdaten hochladen oder **eine neue Datensammlung beginnen** möchtest.  
-    - Die Datei wird **lokal im Cache** gespeichert – es werden **keine Daten extern gespeichert** (z. B. auf GitHub oder Servern).  
-    - Nach dem Upload stehen dir alle bisherigen Klient:innen und Termine im Programm zur Verfügung.
-
-    ---
-
-    ### 2. Neue Klient:innen hinzufügen
-    - Im entsprechenden Bereich kannst du **neue Klient:innen** anlegen.  
-    - Nach Eingabe der Daten (Name, Beginn, Sitzungsart usw.) werden sie in der Übersicht ergänzt.  
-    - Die neue Person wird **nicht automatisch ausgewählt**, sodass du gezielt weiterarbeiten kannst.
-
-    ---
-
-    ### 3. Sitzungen verwalten
-    - Du kannst Sitzungen **hinzufügen, ändern oder beenden**.  
-    - Das **Therapieende** kann über einen Button gesetzt werden; die Person bleibt jedoch in der Datenbank gespeichert.  
-    - Im Kalender oder in der Übersicht siehst du alle kommenden und vergangenen Sitzungen chronologisch.
-
-    ---
-
-    ### 4. Quartalsprognose
-    - Hier werden die vorhandenen Sitzungsdaten **nach Quartalen** ausgewertet.  
-    - Du siehst pro Quartal:
-      - wie viele Sitzungen pro Sitzungsart stattgefunden haben,  
-      - eine **Hochrechnung auf 10 von 12 Wochen**,  
-      - und ggf. die aktuelle Verteilung auf deine Gesamtarbeitszeit.  
-    - Die Prognose aktualisiert sich automatisch, sobald neue Daten hinzugefügt werden.
-
-    ---
-
-    ### 5. Kalender / Übersicht
-    - Zeigt die **aktuellen Sitzungen** aller Klient:innen in einem **Kalenderformat**.  
-    - Du kannst einzelne Klient:innen auswählen, um ihre individuelle Sitzungsübersicht zu sehen.  
-    - Bei mobilen Geräten wird der Kalender möglicherweise verkleinert dargestellt (je nach Browser).
-
-    ---
-
-    ### 6. Datenexport
-    - Die aktuelle Datensammlung kann jederzeit **als CSV-Datei exportiert** werden.  
-    - So kannst du deine Sitzungsdaten lokal sichern oder auf einem anderen Gerät weiterverwenden.
-
-    ---
-
-    ### 7. Allgemeine Hinweise
-    - Alle Daten bleiben **nur während der aktiven Sitzung im Cache** erhalten.  
-      Wenn du das Browserfenster schließt, sind die Änderungen verloren, **sofern du keine CSV exportiert hast.**  
-    - Das Programm ist darauf ausgelegt, **einfach und sicher** zu funktionieren – ideal zur quartalsweisen Abrechnung und Übersicht deiner Therapiesitzungen.
+        ## Anleitung zur Nutzung des IPP Ambulanzverwaltungstools
+        
+        Diese Anwendung dient der Verwaltung von Klientensitzungen, Urlaubszeiträumen und Supervisionsterminen in der psychotherapeutischen Ambulanz.  
+        Sie ist in mehrere Tabs unterteilt, die jeweils eine bestimmte Funktion abbilden.
+        
+        ---
+        
+        ### **1. Kalender**
+        Im Kalender werden alle Termine übersichtlich angezeigt.  
+        Ein Klick auf einen Termin öffnet die möglichen Aktionen.
+        
+        **Verfügbare Aktionen für Therapietermine:**
+        - **Terminausfall:** Der gewählte Termin entfällt; alle folgenden Termine werden automatisch um eine Woche verschoben.  
+        - **PTG markieren:** Der Termin wird als PTG (Psychotherapeutische Gesprächseinheit) gekennzeichnet. Es können maximal drei PTG pro Quartal eingetragen werden.  
+        - **Ab hier verschieben:** Alle zukünftigen Termine werden auf einen anderen Wochentag verlegt.  
+        - **Therapieende:** Alle Termine ab dem gewählten Datum werden gelöscht.
+        
+        **Für Supervisionstermine:**  
+        - Durch Klick kann der jeweilige Termin gelöscht werden.
+        
+        ---
+        
+        ### **2. Abwesenheiten**
+        In diesem Tab können Urlaubszeiträume angegeben werden.  
+        Während des gewählten Zeitraums liegende Termine werden automatisch um eine Woche nach hinten verschoben.
+        
+        **Vorgehen:**
+        1. Urlaubsstart und -ende auswählen.  
+        2. Klient auswählen (oder „Alle“, um alle Termine zu verschieben).  
+        3. Mit *Bestätigen* ausführen.  
+        4. Anschließend werden die verschobenen Termine angezeigt.
+        
+        ---
+        
+        ### **3. Klientenverwaltung**
+        Hier können neue Klienten angelegt und bestehende verwaltet werden.
+        
+        **Neuen Klienten hinzufügen:**
+        1. Kürzel eingeben (zwei Buchstaben).  
+        2. Datum der ersten Sitzung auswählen.  
+        3. *Hinzufügen* klicken.  
+           → Es werden automatisch drei Sprechstunden mit wöchentlichem Abstand angelegt.
+        
+        **Bestehende Klienten:**
+        - Auswahl eines Klienten zeigt alle Termine und eine Übersicht (Startdatum, geplantes Enddatum, Sitzungsanzahl, aktuelle Therapiephase).  
+        - Weitere Sitzungsphasen (Probatorik, KZT, LZT usw.) können in den folgenden Tabs ergänzt werden.
+        
+        ---
+        
+        ### **4. Quartalsprognose**
+        Hier wird die erwartete Verteilung der Sitzungsarten pro Quartal angezeigt.  
+        Die Prognose basiert auf den geplanten Terminen und dient der Vorbereitung für Abrechnungszeiträume.
+        
+        ---
+        
+        ### **5. Supervision**
+        Supervisionstermine (Einzel- oder Gruppensupervision) können hier eingetragen und im Kalender angezeigt oder gelöscht werden.
+        
+        ---
+        
+        ### **6. Datenverwaltung (Seitenleiste)**
+        In der linken Seitenleiste befinden sich die Optionen zum Laden, Erstellen und Speichern von Daten.
+        
+        - **Neuen Datensatz beginnen:**  
+          Erstellt eine leere Datenbasis, um neue Klienten einzutragen.
+        
+        - **CSV-Datei hochladen:**  
+          Lädt bestehende Termindaten in die Anwendung.  
+          Die Datei muss Spalten mit *Datum*, *Klient*, *Sitzungsart* und *Nummer* enthalten.
+        
+        - **CSV-Datei herunterladen:**  
+          Speichert alle aktuellen Daten als `ipp_ambulanzdaten.csv`.
+        
+        ---
+        
+        ### **Hinweise zur Bedienung**
+        - Änderungen (z. B. Terminausfälle, PTG, Urlaube) werden direkt in der Sitzung gespeichert.  
+        - Nach bestimmten Aktionen (z. B. Hinzufügen, Löschen) wird die Seite automatisch neu geladen, um den aktuellen Stand anzuzeigen.  
+        - Das System unterscheidet Sitzungsarten automatisch nach ihrer vorgesehenen Anzahl:
+          - Sprechstunde: 3  
+          - Probatorik: 4 (+ 1 Anamnese)  
+          - Anamnese: 1  
+          - KZT: 24  
+          - LZT: 60  
+          - RFP: 20  
+        
+        ---
+        
+        Diese Anleitung fasst die Kernfunktionen des Tools zusammen und hilft, die Anwendung sicher und effizient zu bedienen.
     """)
     
 with tabs[0]:
