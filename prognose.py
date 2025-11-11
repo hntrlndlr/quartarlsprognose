@@ -24,31 +24,35 @@ HILFE = {
     "Kalender": """
 **Kalender**
 - Termine per Klick bearbeiten.
+- Supervisionstermine können gelöscht werden
 - 'PTG markieren' max. 3x pro Quartal.
-- 'Ab hier verschieben' = alle folgenden Termine auf neuen Wochentag.
+- 'Ab hier verschieben' = alle Termine ab dem ausgewählten auf neuen Wochentag.
 - 'Therapieende' = löscht alle Termine ab gewähltem Datum.
 """,
     "Abwesenheiten": """
 **Abwesenheiten**
 - Wähle Zeitraum und Klient, um Termine automatisch zu verschieben.
-- Urlaub, Krankheit oder Fortbildung eintragen.
+- Wähle "Alle" für Abwesenheiten des Therapeuten (dann werden alle Kliententermine in dem Zeitraum verschoben)
 """,
     "Klienten": """
 **Klientenverwaltung**
-- Neue Klienten mit Kürzel + Datum hinzufügen.
-- Übersicht zeigt aktuelle Therapiephase.
-- Filter nach aktiven oder inaktiven Klienten möglich.
+- Neue Klienten mit Kürzel + Datum hinzufügen (es werden standardmäßig drei Sprechstunden hinzugefügt)
+- Übersicht eines Klienten zeigt aktuelle Therapiephase.
+- Bei Auswahl eines Klienten können Probatotorik/KZT/LZT/RFP hinzugefügt werden
+- Wenn der Klient in der KZT ist, kann eine Umwandlung erfolgen
+- Wenn der Klient in der LZT ist, kann eine RFP begonnen werden)
 """,
     "Quartalsprognose": """
 **Quartalsprognose**
-- Zeigt Übersicht geplanter Sitzungen pro Klient.
-- Schätzung basiert auf 10/12 Formel.
-- Filter nach Quartal oder Jahr möglich.
+- Zeigt Übersicht geplanter Sitzungen für alle Klienten.
+- Schätzung basiert auf 10/12 Formel (Korrektur für Krank/Urlaub)
+- Filter nach Quartal möglich.
 """,
     "Supervision": """
 **Supervision**
 - Hier werden Supervisionstermine verwaltet.
-- Feedback und Notizen können direkt hinterlegt werden.
+- Supervisionstermine können hinzugefügt werden (Stundenanzahl und Supervisionsart)
+- Bis zu einem Stichtag kann dann das SOLL und IST von Supervisionen verglichen werden
 """,
     "Anleitung": """
 **Allgemeine Anleitung**
@@ -995,7 +999,7 @@ with tabs[4]:
         with st.form("sup_ov"):
             due_day = st.date_input("Bitte wähle einen Stichtag aus.", format="DD/MM/YYYY")
             if st.form_submit_button("Bestätigen"):
-                subset = st.session_state.sitzungen[st.session_state.sitzungen["Datum"] < pd.Timestamp(due_day)]
+                subset = st.session_state.sitzungen[st.session_state.sitzungen["Datum"] <= pd.Timestamp(due_day)]
                 subset_sitzungen = subset[subset["Sitzungsart"] != "Supervision"].shape[0]
                 subset_sup = subset[subset["Sitzungsart"] == "Supervision"]
     
