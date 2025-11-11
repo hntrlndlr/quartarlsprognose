@@ -319,8 +319,8 @@ def wochentag_auswahl():
     
     return ausgewaehlte_zahl
 
-def abbruch_button():
-    if st.button("Abbrechen"):
+def abbruch_button(key="abbrechen"):
+    if st.button("Abbrechen", key=key):
         st.session_state.last_button_click = None
         st.session_state.selected_event = None
         st.rerun()
@@ -524,7 +524,7 @@ with tabs[0]:
                     st.session_state.selected_event = None
                     st.rerun()
     
-            abbruch_button()
+            abbruch_button("sup")
     
         elif action == "Terminausfall":
             with st.form("terminausfall"):
@@ -535,7 +535,7 @@ with tabs[0]:
                     st.session_state.last_button_click = None
                     st.session_state.selected_event = None
                     st.rerun()
-            abbruch_button()
+            abbruch_button("terminausfall")
     
         elif action == "PTG":
             with st.form("ptg"):
@@ -554,7 +554,7 @@ with tabs[0]:
                         st.session_state.last_button_click = None
                         st.session_state.selected_event = None
                         st.rerun()
-            abbruch_button()
+            abbruch_button("ptg")
     
         elif action == "Verschieben":
             with st.form("verschieben"):
@@ -565,7 +565,7 @@ with tabs[0]:
                     st.session_state.last_button_click = None
                     st.session_state.selected_event = None
                     st.rerun()
-            abbruch_button()
+            abbruch_button("verschieben")
     
         elif action == "Ende":
             with st.form("ende"):
@@ -576,7 +576,7 @@ with tabs[0]:
                     st.session_state.last_button_click = None
                     st.session_state.selected_event = None
                     st.rerun()
-            abbruch_button()
+            abbruch_button("ende")
             
 with tabs[1]:
     st.header("Urlaubsverwaltung")
@@ -614,7 +614,7 @@ with tabs[1]:
             if st.button("OK, aktualisieren"):
                 st.rerun()
 
-        abbruch_button()
+        abbruch_button("urlaub")
         
     else:
         st.info("Füge einen Klienten hinzu, um Abwesenheiten zu verwalten")
@@ -759,7 +759,7 @@ with tabs[2]:
                         add_sessions_callback("Probatorik")
                         st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
-                abbruch_button()
+                abbruch_button("probatorik")
             
             elif st.session_state.last_button_click == "KZT":
                 with st.form("kzt_eingabe"):
@@ -773,7 +773,7 @@ with tabs[2]:
                         add_sessions_callback("KZT", start_kzt)
                         st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
-                abbruch_button()
+                abbruch_button("kzt")
             
             elif st.session_state.last_button_click == "LZT":
                 with st.form("lzt_eingabe"):
@@ -787,7 +787,7 @@ with tabs[2]:
                         add_sessions_callback("LZT", start_lzt)
                         st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
-                abbruch_button()
+                abbruch_button("lzt")
             
             elif st.session_state.last_button_click == "RFP":
                 with st.form("rfp_eingabe"):
@@ -801,7 +801,7 @@ with tabs[2]:
                         add_sessions_callback("RFP", start_rfp)
                         st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
-                abbruch_button()
+                abbruch_button("rfp")
             
             elif st.session_state.last_button_click == "Umwandlung":
                 with st.form("umwandlung_eingabe"):
@@ -814,7 +814,7 @@ with tabs[2]:
                         convert_kzt_to_lzt_callback(start_umwandlung)
                         st.session_state.last_button_click = None  # Zurücksetzen
                         st.rerun()
-                abbruch_button()
+                abbruch_button("umwandlung")
     
     else:
         st.info("Füge zuerst einen Klienten hinzu, um die Übersicht zu sehen.")
