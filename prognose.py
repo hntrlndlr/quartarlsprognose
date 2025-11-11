@@ -529,7 +529,7 @@ with tabs[5]:
 with tabs[0]:
     st.header("Kalenderübersicht")
     with st.expander("Hilfe anzeigen"):
-        st.markdown(HILFE["Kalender"]                   
+        st.markdown(HILFE["Kalender"])                   
     st.header("Kalender")
     
     calendar_options = {
@@ -655,7 +655,7 @@ with tabs[0]:
 with tabs[1]:
     st.header("Urlaubsverwaltung")
     with st.expander("Hilfe anzeigen"):
-        st.markdown(HILFE["Abwesenheiten"]     
+        st.markdown(HILFE["Abwesenheiten"])     
     clients = st.session_state.sitzungen["Klient"].dropna().unique()
     
     if clients.size > 0:
@@ -697,7 +697,7 @@ with tabs[1]:
 with tabs[2]:
     st.header("Klientenverwaltung")
     with st.expander("Hilfe anzeigen"):
-        st.markdown(HILFE["Klienten"]     
+        st.markdown(HILFE["Klienten"])     
     st.subheader("Neuen Klienten hinzufügen")
     with st.form("eingabemaske_klient"):
         name = st.text_input("Name des Klienten", max_chars=2)
@@ -899,7 +899,7 @@ with tabs[2]:
 with tabs[3]:
     st.header("Quartalsprognose")
     with st.expander("Hilfe anzeigen"):
-        st.markdown(HILFE["Quartalsprognose"]     
+        st.markdown(HILFE["Quartalsprognose"])     
     clients = st.session_state.sitzungen["Klient"].dropna().unique()  
 
     if clients.size > 0:
@@ -964,7 +964,7 @@ with tabs[3]:
 with tabs[4]:
     st.header("Supervision")
     with st.expander("Hilfe anzeigen"):
-        st.markdown(HILFE["Supervision"]     
+        st.markdown(HILFE["Supervision"])     
     clients = st.session_state.sitzungen["Klient"].dropna().unique()     
 
     with st.form("sup_add"):
