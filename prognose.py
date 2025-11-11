@@ -20,6 +20,44 @@ SITZUNGEN_TYPEN = {
     "RFP": 20
 }
 
+HILFE = {
+    "Kalender": """
+**Kalender**
+- Termine per Klick bearbeiten.
+- 'PTG markieren' max. 3x pro Quartal.
+- 'Ab hier verschieben' = alle folgenden Termine auf neuen Wochentag.
+- 'Therapieende' = löscht alle Termine ab gewähltem Datum.
+""",
+    "Abwesenheiten": """
+**Abwesenheiten**
+- Wähle Zeitraum und Klient, um Termine automatisch zu verschieben.
+- Urlaub, Krankheit oder Fortbildung eintragen.
+""",
+    "Klienten": """
+**Klientenverwaltung**
+- Neue Klienten mit Kürzel + Datum hinzufügen.
+- Übersicht zeigt aktuelle Therapiephase.
+- Filter nach aktiven oder inaktiven Klienten möglich.
+""",
+    "Quartalsprognose": """
+**Quartalsprognose**
+- Zeigt Übersicht geplanter Sitzungen pro Klient.
+- Schätzung basiert auf 10/12 Formel.
+- Filter nach Quartal oder Jahr möglich.
+""",
+    "Supervision": """
+**Supervision**
+- Hier werden Supervisionstermine verwaltet.
+- Feedback und Notizen können direkt hinterlegt werden.
+""",
+    "Anleitung": """
+**Allgemeine Anleitung**
+- Nutze die Tabs, um die verschiedenen Funktionen zu steuern.
+- Hilfe-Expander geben kurze Erklärungen.
+- Für detaillierte Infos siehe Dokumentation oder Sidebar-Hilfe.
+"""
+}
+
 # --- HILFSFUNKTIONEN & DATENMANAGEMENT ---
 
 def load_data():
@@ -490,6 +528,8 @@ with tabs[5]:
     
 with tabs[0]:
     st.header("Kalenderübersicht")
+    with st.expander("Hilfe anzeigen"):
+        st.markdown(HILFE["Kalender"]                   
     st.header("Kalender")
     
     calendar_options = {
@@ -614,7 +654,8 @@ with tabs[0]:
             
 with tabs[1]:
     st.header("Urlaubsverwaltung")
-
+    with st.expander("Hilfe anzeigen"):
+        st.markdown(HILFE["Abwesenheiten"]     
     clients = st.session_state.sitzungen["Klient"].dropna().unique()
     
     if clients.size > 0:
@@ -654,7 +695,9 @@ with tabs[1]:
         st.info("Füge einen Klienten hinzu, um Abwesenheiten zu verwalten")
 
 with tabs[2]:
-    st.header("Klientenverwaltung")    
+    st.header("Klientenverwaltung")
+    with st.expander("Hilfe anzeigen"):
+        st.markdown(HILFE["Klienten"]     
     st.subheader("Neuen Klienten hinzufügen")
     with st.form("eingabemaske_klient"):
         name = st.text_input("Name des Klienten", max_chars=2)
@@ -855,6 +898,8 @@ with tabs[2]:
 
 with tabs[3]:
     st.header("Quartalsprognose")
+    with st.expander("Hilfe anzeigen"):
+        st.markdown(HILFE["Quartalsprognose"]     
     clients = st.session_state.sitzungen["Klient"].dropna().unique()  
 
     if clients.size > 0:
@@ -918,6 +963,8 @@ with tabs[3]:
 
 with tabs[4]:
     st.header("Supervision")
+    with st.expander("Hilfe anzeigen"):
+        st.markdown(HILFE["Supervision"]     
     clients = st.session_state.sitzungen["Klient"].dropna().unique()     
 
     with st.form("sup_add"):
