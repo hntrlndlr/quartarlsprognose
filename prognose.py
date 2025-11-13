@@ -260,7 +260,7 @@ def loesche_urlaub(start, ende, klient):
         termine = termine[termine["Klient"]==klient]
         
     urlaub_start = pd.to_datetime(start)
-    urlaub_ende = pd.to_datetime(ende)
+    urlaub_ende = pd.to_datetime()
     
     urlaub_termine = termine[
         (termine["Datum"]>=urlaub_start) &
@@ -669,7 +669,7 @@ with tabs[1]:
             st.subheader("Termine wegen Urlaub verschieben")
 
             u_start = st.date_input("Bitte gib den Urlaubsstart ein")
-            u_end = st.date_input("Bitte gib das Urlaubsende ein")
+            u_end = st.date_input("Bitte gib das Urlaubsende ein", min = u_start)
             u_klient = st.selectbox(
                 "Wähle einen Klienten aus", 
                 ["Alle"] + valid_clients, 
