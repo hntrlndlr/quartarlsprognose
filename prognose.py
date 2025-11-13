@@ -690,7 +690,7 @@ with tabs[1]:
                 "Wählen Sie einen Datumsbereich für die Abwesenheit aus",
                 value=(start_date_default, end_date_default),
                 help="Wählen Sie das Start- und Enddatum aus",
-                format = "DD/MM/YYYY"
+                format = "DD.MM.YYYY"
             )
             
             u_klient = st.selectbox(
@@ -737,7 +737,7 @@ with tabs[2]:
     st.subheader("Neuen Klienten hinzufügen")
     with st.form("eingabemaske_klient"):
         name = st.text_input("Name des Klienten", max_chars=2)
-        start_datum_input = st.date_input("Datum der ersten Sitzung", format="DD/MM/YYYY") 
+        start_datum_input = st.date_input("Datum der ersten Sitzung", format="DD.MM.YYYY") 
         submitted = st.form_submit_button("Hinzufügen")
         clients = st.session_state.sitzungen["Klient"].dropna().unique()
         
@@ -1007,7 +1007,7 @@ with tabs[4]:
     clients = st.session_state.sitzungen["Klient"].dropna().unique()     
 
     with st.form("sup_add"):
-        sup_date = st.date_input("Datum Supervision", format="DD/MM/YYYY")
+        sup_date = st.date_input("Datum Supervision", format="DD.MM.YYYY")
         sup_type = st.radio("Einzel-/Gruppensupervision?", options=["E-SV", "G-SV"])
         sup_stunden = st.number_input(
             "Anzahl Stunden",
@@ -1032,7 +1032,7 @@ with tabs[4]:
     if supervisionen.size > 0:
         st.subheader("Supervisionsübersicht (IST vs SOLL)")
         with st.form("sup_ov"):
-            due_day = st.date_input("Bitte wähle einen Stichtag aus.", format="DD/MM/YYYY")
+            due_day = st.date_input("Bitte wähle einen Stichtag aus.", format="DD.MM.YYYY")
             if st.form_submit_button("Bestätigen"):
                 subset = st.session_state.sitzungen[st.session_state.sitzungen["Datum"] <= pd.Timestamp(due_day)]
                 subset_sitzungen = subset[subset["Sitzungsart"] != "Supervision"].shape[0]
