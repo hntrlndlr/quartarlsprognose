@@ -677,9 +677,6 @@ with tabs[1]:
                 help="Wählen Sie das Start- und Enddatum aus",
                 format = "DD/MM/YYYY"
             )
-
-            u_start = pd.to_datetime(u_dates[0])
-            u_end = pd.to_datetime(u_dates[1])
             
             u_klient = st.selectbox(
                 "Wähle einen Klienten aus", 
@@ -690,19 +687,23 @@ with tabs[1]:
             submitted = st.form_submit_button("Bestätigen")
         
         if submitted:
-            # Termine verschieben
-            urlaub_termine = loesche_urlaub(u_start, u_end, u_klient)
-
-            # Zeige die verschobenen Termine als Tabelle
-            if not urlaub_termine.empty:
-                # Erfolgsmeldung mit Zeilenumbruch
-                st.success("Die folgenden Termine wurden erfolgreich verschoben:")
-                st.dataframe(urlaub_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]])
-            else:
-                st.info("Keine Termine für den gewählten Zeitraum gefunden.")
+            if len(u_dates) == 2:
+                u_start = pd.to_datetime(u_dates[0])
+                u_end = pd.to_datetime(u_dates[1])
             
-            if st.button("OK, aktualisieren"):
-                st.rerun()
+                # Termine verschieben
+                urlaub_termine = loesche_urlaub(u_start, u_end, u_klient)
+    
+                # Zeige die verschobenen Termine als Tabelle
+                if not urlaub_termine.empty:
+                    # Erfolgsmeldung mit Zeilenumbruch
+                    st.success("Die folgenden Termine wurden erfolgreich verschoben:")
+                    st.dataframe(urlaub_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]])
+                else:
+                    st.info("Keine Termine für den gewählten Zeitraum gefunden.")
+                
+                if st.button("OK, aktualisieren"):
+                    st.rerun()
 
         abbruch_button("urlaub")
         
