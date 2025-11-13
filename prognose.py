@@ -690,7 +690,7 @@ with tabs[1]:
         
         if submitted:
             # Termine verschieben
-            urlaub_termine = loesche_urlaub(u_dates[0], u_dates[1], u_klient)
+            urlaub_termine = loesche_urlaub(u_start, u_end, u_klient)
 
             # Zeige die verschobenen Termine als Tabelle
             if not urlaub_termine.empty:
