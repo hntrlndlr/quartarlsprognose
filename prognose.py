@@ -373,6 +373,8 @@ st.set_page_config(page_title="IPP Ambulanzverwaltungstool", layout="wide")
 st.title("IPP Ambulanzverwaltungstool")
 
 # Initialisiere den Zustand für die Benutzerinteraktion
+if 'ausgewaehlter_klient' not in st.session_state:
+    st.session_state.ausgewaehlter_klient = None 
 if 'last_button_click' not in st.session_state:
     st.session_state.last_button_click = None
 if 'sitzungen' not in st.session_state:
