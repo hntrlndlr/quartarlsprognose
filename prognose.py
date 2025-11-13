@@ -713,7 +713,16 @@ with tabs[1]:
                 if not urlaub_termine.empty:
                     # Erfolgsmeldung mit Zeilenumbruch
                     st.success("Die folgenden Termine wurden erfolgreich verschoben:")
-                    st.dataframe(urlaub_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]])
+                    st.dataframe(
+                        urlaub_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]],
+                        column_config={
+                            "Datum": st.column_config.DatetimeColumn(
+                                "Datum",
+                                format="DD.MM.YYYY",
+                                time_format=""
+                            )
+                        }
+                    )
                 else:
                     st.info("Keine Termine für den gewählten Zeitraum gefunden.")
                 
@@ -795,7 +804,19 @@ with tabs[2]:
                 }).T 
                 st.write(uebersicht_klient)
                 st.subheader(f"Terminliste für {st.session_state.ausgewaehlter_klient}")
-                st.dataframe(klient_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]])
+                st.dataframe(
+                    klient_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]],
+                    st.dataframe(
+                        urlaub_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]],
+                        column_config={
+                            "Datum": st.column_config.DatetimeColumn(
+                                "Datum",
+                                format="DD.MM.YYYY",
+                                time_format=""
+                            )
+                        }
+                    )
+                )
             else:
                 st.info("Keine Termine für diesen Klienten gefunden.")
                 current_therapy = None
@@ -988,7 +1009,7 @@ with tabs[3]:
                 }
                 prognose.loc['Gesamt'] = neue_zeile_werte
         
-                st.write(prognose)
+                st.dataframe(prognose)
     else: 
         st.info("Füge zuerst einen Klienten hinzu, um die Quartalsprognose zu bestimmen")
 
