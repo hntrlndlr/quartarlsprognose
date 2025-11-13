@@ -667,9 +667,17 @@ with tabs[1]:
 
         with st.form("urlaub"):
             st.subheader("Termine wegen Urlaub verschieben")
+            u_start = date.today()
+            u_end = today + timedelta(days=14)
+            start_date_default = today
+            end_date_default = tomorrow
 
-            u_start = st.date_input("Bitte gib den Urlaubsstart ein")
-            u_end = st.date_input("Bitte gib das Urlaubsende ein", min_value = u_start)
+            u_dates = st.date_input(
+                "Wählen Sie einen Datumsbereich für die Abwesenheit aus",
+                value=(start_date_default, end_date_default),
+                help="Wählen Sie das Start- und Enddatum aus"
+            )
+            
             u_klient = st.selectbox(
                 "Wähle einen Klienten aus", 
                 ["Alle"] + valid_clients, 
@@ -680,7 +688,7 @@ with tabs[1]:
         
         if submitted:
             # Termine verschieben
-            urlaub_termine = loesche_urlaub(u_start, u_end, u_klient)
+            urlaub_termine = loesche_urlaub(u_dates[0], u_dates[1], u_klient)
 
             # Zeige die verschobenen Termine als Tabelle
             if not urlaub_termine.empty:
