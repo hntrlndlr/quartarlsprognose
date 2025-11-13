@@ -768,7 +768,7 @@ with tabs[2]:
                 }).T 
                 st.write(uebersicht_klient)
                 st.subheader(f"Terminliste für {st.session_state.ausgewaehlter_klient}")
-                st.dataframe(klient_termine["Datum", "Klient", "Sitzungsart", "Nummer"])
+                st.dataframe(klient_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]])
             else:
                 st.info("Keine Termine für diesen Klienten gefunden.")
                 current_therapy = None
