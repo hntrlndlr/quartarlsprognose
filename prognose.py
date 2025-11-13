@@ -714,10 +714,10 @@ with tabs[1]:
                     # Erfolgsmeldung mit Zeilenumbruch
                     st.success("Die folgenden Termine wurden erfolgreich verschoben:")
 
-                    urlaub_termine["Datum"] = urlaub_termine["Datum"].dt.strftime("%d.%m.%Y")
+                    urlaub_termine["Datum_formatiert"] = urlaub_termine["Datum"].dt.strftime("%d.%m.%Y")
                     
                     st.dataframe(
-                        urlaub_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]]
+                        urlaub_termine[["Datum_formatiert", "Klient", "Sitzungsart", "Nummer"]]
                     )
                 else:
                     st.info("Keine Termine für den gewählten Zeitraum gefunden.")
@@ -800,9 +800,9 @@ with tabs[2]:
                 }).T 
                 st.write(uebersicht_klient)
                 st.subheader(f"Terminliste für {st.session_state.ausgewaehlter_klient}")
-                klient_termine["Datum"] = klient_termine["Datum"].dt.strftime("%d.%m.%Y")
+                klient_termine["Datum_formatiert"] = klient_termine["Datum"].dt.strftime("%d.%m.%Y")
                 st.dataframe(
-                    klient_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]]
+                    klient_termine[["Datum_formatiert", "Klient", "Sitzungsart", "Nummer"]]
                 )
             else:
                 st.info("Keine Termine für diesen Klienten gefunden.")
