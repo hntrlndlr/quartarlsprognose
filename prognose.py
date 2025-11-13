@@ -425,10 +425,23 @@ with st.sidebar:
     st.subheader("Daten sichern")
     if 'sitzungen' in st.session_state and not st.session_state.sitzungen.empty:
         csv = st.session_state.sitzungen.to_csv(index=False).encode('utf-8')
+        # Get the current date and time
+        now = datetime.now()
+        
+        # Format the timestamp into a string suitable for a filename (e.g., "2025-11-13_13-31-00")
+        timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
+        
+        # Define the base filename and extension
+        base_filename = "ipp_ambulanzdaten"
+        file_extension = ".csv"
+        
+        # Construct the full filename
+        filename = f"{base_filename}_{timestamp}{file_extension}"
+
         st.download_button(
             label="Daten als CSV herunterladen",
             data=csv,
-            file_name="ipp_ambulanzdaten.csv",
+            file_name=filename,
             mime="text/csv"
         )
 
