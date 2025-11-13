@@ -260,7 +260,7 @@ def loesche_urlaub(start, ende, klient):
         termine = termine[termine["Klient"]==klient]
         
     urlaub_start = pd.to_datetime(start)
-    urlaub_ende = pd.to_datetime()
+    urlaub_ende = pd.to_datetime(ende)
     
     urlaub_termine = termine[
         (termine["Datum"]>=urlaub_start) &
