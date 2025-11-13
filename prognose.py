@@ -689,7 +689,7 @@ with tabs[1]:
             submitted = st.form_submit_button("Bestätigen")
         
         if submitted:
-            st.write([u_start, u_end])
+            st.write(u_dates)
             '''
             # Termine verschieben
             urlaub_termine = loesche_urlaub(u_start, u_end, u_klient)
