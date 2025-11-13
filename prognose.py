@@ -674,7 +674,8 @@ with tabs[1]:
             u_dates = st.date_input(
                 "Wählen Sie einen Datumsbereich für die Abwesenheit aus",
                 value=(start_date_default, end_date_default),
-                help="Wählen Sie das Start- und Enddatum aus"
+                help="Wählen Sie das Start- und Enddatum aus",
+                format = "DD/MM/YYYY"
             )
 
             u_start, u_end = u_dates
