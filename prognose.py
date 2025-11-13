@@ -669,7 +669,7 @@ with tabs[1]:
             st.subheader("Termine wegen Urlaub verschieben")
 
             u_start = st.date_input("Bitte gib den Urlaubsstart ein")
-            u_end = st.date_input("Bitte gib das Urlaubsende ein", min = u_start)
+            u_end = st.date_input("Bitte gib das Urlaubsende ein", min_value = u_start)
             u_klient = st.selectbox(
                 "Wähle einen Klienten aus", 
                 ["Alle"] + valid_clients, 
