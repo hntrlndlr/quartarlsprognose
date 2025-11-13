@@ -686,7 +686,7 @@ with tabs[1]:
             if not urlaub_termine.empty:
                 # Erfolgsmeldung mit Zeilenumbruch
                 st.success("Die folgenden Termine wurden erfolgreich verschoben:")
-                st.dataframe(urlaub_termine[0:3])
+                st.dataframe(urlaub_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]])
             else:
                 st.info("Keine Termine für den gewählten Zeitraum gefunden.")
 
