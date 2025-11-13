@@ -807,7 +807,7 @@ with tabs[2]:
                 st.dataframe(
                     klient_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]],
                     st.dataframe(
-                        urlaub_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]],
+                        klient_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]],
                         column_config={
                             "Datum": st.column_config.DatetimeColumn(
                                 "Datum",
