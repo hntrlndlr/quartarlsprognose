@@ -678,7 +678,8 @@ with tabs[1]:
                 format = "DD/MM/YYYY"
             )
 
-            u_start, u_end = u_dates
+            u_start = pd.to_datetime(u_dates[0])
+            u_end = pd.to_datetime(u_dates[1])
             
             u_klient = st.selectbox(
                 "Wähle einen Klienten aus", 
