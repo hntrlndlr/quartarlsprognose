@@ -667,16 +667,17 @@ with tabs[1]:
 
         with st.form("urlaub"):
             st.subheader("Termine wegen Urlaub verschieben")
-            u_start = date.today()
-            u_end = today + timedelta(days=14)
-            start_date_default = today
-            end_date_default = tomorrow
+            
+            start_date_default = date.today()
+            end_date_default = date.today() + timedelta(days=14)
 
             u_dates = st.date_input(
                 "Wählen Sie einen Datumsbereich für die Abwesenheit aus",
                 value=(start_date_default, end_date_default),
                 help="Wählen Sie das Start- und Enddatum aus"
             )
+
+            u_start, u_end = u_dates
             
             u_klient = st.selectbox(
                 "Wähle einen Klienten aus", 
