@@ -690,8 +690,6 @@ with tabs[1]:
             submitted = st.form_submit_button("Bestätigen")
         
         if submitted:
-            st.write(u_dates[0])
-            '''
             # Termine verschieben
             urlaub_termine = loesche_urlaub(u_start, u_end, u_klient)
 
@@ -702,7 +700,6 @@ with tabs[1]:
                 st.dataframe(urlaub_termine[["Datum", "Klient", "Sitzungsart", "Nummer"]])
             else:
                 st.info("Keine Termine für den gewählten Zeitraum gefunden.")
-            '''
             
             if st.button("OK, aktualisieren"):
                 st.rerun()
