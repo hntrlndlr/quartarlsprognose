@@ -5,6 +5,9 @@ from streamlit_calendar import calendar
 import os
 import streamlit.components.v1 as components
 
+import locale
+locale.setlocale(locale.LC_ALL, "de_DE")
+
 # --- KONFIGURATION & SETUP ---
 
 # Konstanten für Dateispeicher
