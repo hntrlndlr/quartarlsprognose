@@ -878,7 +878,7 @@ with tabs[2]:
 
     if kv_choice == "Neuen Klienten hinzufügen":
         with st.form("eingabemaske_klient"):
-            name = st.text_input("Kürzel des Klienten", max_chars=2, help="Bitte gib die Initialen des Klienten ein")
+            name = st.text_input("Kürzel des Klienten", max_chars=3, help="Bitte gib die Initialen des Klienten ein")
             start_datum_input = st.date_input("Datum der ersten Sitzung", format="DD.MM.YYYY")
             submitted = st.form_submit_button("Hinzufügen")
             clients = st.session_state.sitzungen["Klient"].dropna().unique()
