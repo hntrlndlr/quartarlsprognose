@@ -886,6 +886,8 @@ with tabs[2]:
             if submitted:
                 if name in clients:
                     st.warning(f"'{name}' existiert bereits! Bitte wähle ein anderes Kürzel.")
+                if name.isdigit():
+                    st.warning(f"'{name}' ist kein zulässiges Kürzel! Bitte wähle ein anderes Kürzel mit mindestens einem Buchstaben, zum Beispiel 'K{name}'.")
                 elif name and start_datum_input:
                     p_sitzungen = setze_basissitzungen(name, start_datum_input)
                     st.session_state.sitzungen = pd.concat(
