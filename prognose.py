@@ -888,6 +888,8 @@ with tabs[2]:
                     st.warning(f"'{name}' existiert bereits! Bitte wähle ein anderes Kürzel.")
                 if name.isdigit():
                     st.warning(f"'{name}' ist kein zulässiges Kürzel! Bitte wähle ein anderes Kürzel mit mindestens einem Buchstaben, zum Beispiel 'K{name}'.")
+                elif not re.match("^[A-Za-z0-9äöüÄÖÜß]+$", name):
+                    st.warning(f"'{name}' ist kein zulässiges Kürzel! Bitte verwende nur die Buchstaben von A-Z und die Zahlen von 0-9.")
                 elif name and start_datum_input:
                     p_sitzungen = setze_basissitzungen(name, start_datum_input)
                     st.session_state.sitzungen = pd.concat(
