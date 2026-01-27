@@ -1165,7 +1165,7 @@ with tabs[4]:
                 })
                 
                 st.session_state.sitzungen = pd.concat([st.session_state.sitzungen, sup_sitzung], ignore_index=True)
-                st.rerun()
+                st.success(f"{sup_stunden} h {sup_type} am {sup_date.strftime("%d. $B %y")} wurden hinzugefügt.")
                 
     elif sv_choice == "Supervisions SOLL vs. IST vergleichen":
         supervisionen = st.session_state.sitzungen[st.session_state.sitzungen["Sitzungsart"] == "Supervision"]
