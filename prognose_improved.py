@@ -926,7 +926,7 @@ def main():
             
             # Y-Achse bis mindestens 600
             max_y = max(650, alle_sitzungen_sorted['Kumulative_Anzahl'].max() + 50)
-            fig.update_yaxis(range=[0, max_y])
+            fig.update_yaxes(range=[0, max_y])
             
             st.plotly_chart(fig, use_container_width=True)
             
