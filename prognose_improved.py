@@ -794,7 +794,7 @@ def main():
         )
         
         # Grafische Darstellung
-        if anzahl_sitzungen > 0:
+        if anzahl_sitzungen > 0 and not alle_sitzungen.empty:
             import plotly.graph_objects as go
             from plotly.subplots import make_subplots
             
@@ -886,27 +886,26 @@ def main():
                     ))
             
             # Ziellinie bei 600
-            if not alle_sitzungen_sorted.empty:
-                x_min = alle_sitzungen_sorted['Datum'].min()
-                x_max = alle_sitzungen_sorted['Datum'].max()
-                
-                # Wenn Prognose vorhanden, x_max erweitern
-                if anzahl_letzter_monat > 0:
-                    sitzungen_pro_tag = anzahl_letzter_monat / 30
-                    fehlende_sitzungen = ziel_sitzungen - anzahl_sitzungen
-                    if fehlende_sitzungen > 0 and sitzungen_pro_tag > 0:
-                        tage_bis_ziel = fehlende_sitzungen / sitzungen_pro_tag
-                        ziel_datum = heute + timedelta(days=int(tage_bis_ziel))
-                        x_max = max(x_max, ziel_datum)
-                
-                fig.add_trace(go.Scatter(
-                    x=[x_min, x_max],
-                    y=[ziel_sitzungen, ziel_sitzungen],
-                    mode='lines',
-                    name='Ziel: 600',
-                    line=dict(color='#95a5a6', width=1, dash='dot'),
-                    showlegend=False
-                ))
+            x_min = alle_sitzungen_sorted['Datum'].min()
+            x_max = alle_sitzungen_sorted['Datum'].max()
+            
+            # Wenn Prognose vorhanden, x_max erweitern
+            if anzahl_letzter_monat > 0:
+                sitzungen_pro_tag = anzahl_letzter_monat / 30
+                fehlende_sitzungen = ziel_sitzungen - anzahl_sitzungen
+                if fehlende_sitzungen > 0 and sitzungen_pro_tag > 0:
+                    tage_bis_ziel = fehlende_sitzungen / sitzungen_pro_tag
+                    ziel_datum = heute + timedelta(days=int(tage_bis_ziel))
+                    x_max = max(x_max, ziel_datum)
+            
+            fig.add_trace(go.Scatter(
+                x=[x_min, x_max],
+                y=[ziel_sitzungen, ziel_sitzungen],
+                mode='lines',
+                name='Ziel: 600',
+                line=dict(color='#95a5a6', width=1, dash='dot'),
+                showlegend=False
+            ))
             
             # Layout anpassen
             fig.update_layout(
@@ -926,10 +925,7 @@ def main():
             )
             
             # Y-Achse bis mindestens 600
-            if not alle_sitzungen_sorted.empty:
-                max_y = max(650, alle_sitzungen_sorted['Kumulative_Anzahl'].max() + 50)
-            else:
-                max_y = 650
+            max_y = max(650, alle_sitzungen_sorted['Kumulative_Anzahl'].max() + 50)
             fig.update_yaxis(range=[0, max_y])
             
             st.plotly_chart(fig, use_container_width=True)
@@ -952,8 +948,8 @@ def main():
                     st.success("Glückwunsch! Du hast dein Ziel von 600 Sitzungen erreicht!")
             else:
                 st.info("Keine Sitzungen im letzten Monat. Starte wieder durch!")
-        elif anzahl_sitzungen > 0:
-            st.info("Noch zu wenige Daten für eine Prognose. Weiter so!")
+        else:
+            st.info("Noch keine Sitzungen vorhanden. Importiere deine Daten oder füge Klienten hinzu!")
     
     # Hauptbereich mit Tabs
     tabs = st.tabs([
