@@ -774,6 +774,11 @@ def main():
             (st.session_state.sitzungen['Sitzungsart'] != 'Supervision')
         ]
         
+        # Alle geplanten Sitzungen (auch zukünftige)
+        alle_sitzungen = st.session_state.sitzungen[
+            st.session_state.sitzungen['Sitzungsart'] != 'Supervision'
+        ].copy()
+        
         anzahl_sitzungen = len(vergangene_sitzungen)
         ziel_sitzungen = 600
         fortschritt_prozent = (anzahl_sitzungen / ziel_sitzungen) * 100
@@ -788,34 +793,156 @@ def main():
             f"{fortschritt_prozent:.1f}% geschafft!"
         )
         
-        # Prognose basierend auf letztem Monat (statt gesamtem Zeitraum)
-        if anzahl_sitzungen >= 5:
-            # Letzter Monat = 30 Tage
-            vor_einem_monat = heute - timedelta(days=30)
+        # Grafische Darstellung
+        if anzahl_sitzungen > 0:
+            import plotly.graph_objects as go
+            from plotly.subplots import make_subplots
             
-            # Sitzungen im letzten Monat
+            # Daten für Verlauf vorbereiten
+            alle_sitzungen_sorted = alle_sitzungen.sort_values('Datum')
+            alle_sitzungen_sorted['Kumulative_Anzahl'] = range(1, len(alle_sitzungen_sorted) + 1)
+            
+            # Vergangene Sitzungen (durchgezogene Linie)
+            vergangene_sorted = alle_sitzungen_sorted[alle_sitzungen_sorted['Datum'] <= heute]
+            
+            # Geplante Sitzungen (gestrichelte Linie)
+            geplante_sorted = alle_sitzungen_sorted[alle_sitzungen_sorted['Datum'] > heute]
+            
+            # Prognose basierend auf letztem Monat berechnen
+            vor_einem_monat = heute - timedelta(days=30)
             sitzungen_letzter_monat = vergangene_sitzungen[
                 vergangene_sitzungen['Datum'] >= vor_einem_monat
             ]
-            
             anzahl_letzter_monat = len(sitzungen_letzter_monat)
             
-            if anzahl_letzter_monat > 0:
-                # Durchschnittliche Sitzungen pro Tag im letzten Monat
-                sitzungen_pro_tag = anzahl_letzter_monat / 30
+            # Figure erstellen
+            fig = go.Figure()
+            
+            # Vergangene Sitzungen (durchgezogene Linie)
+            if not vergangene_sorted.empty:
+                fig.add_trace(go.Scatter(
+                    x=vergangene_sorted['Datum'],
+                    y=vergangene_sorted['Kumulative_Anzahl'],
+                    mode='lines+markers',
+                    name='Absolviert',
+                    line=dict(color='#2ecc71', width=3),
+                    marker=dict(size=6)
+                ))
+            
+            # Geplante Sitzungen (gestrichelte Linie)
+            if not geplante_sorted.empty:
+                # Verbindung zwischen letzter absolvierter und erster geplanter Sitzung
+                if not vergangene_sorted.empty:
+                    letzte_absolviert = vergangene_sorted.iloc[-1]
+                    erste_geplant = geplante_sorted.iloc[0]
+                    
+                    fig.add_trace(go.Scatter(
+                        x=[letzte_absolviert['Datum'], erste_geplant['Datum']],
+                        y=[letzte_absolviert['Kumulative_Anzahl'], erste_geplant['Kumulative_Anzahl']],
+                        mode='lines',
+                        name='Geplant',
+                        line=dict(color='#3498db', width=2, dash='dash'),
+                        showlegend=False
+                    ))
                 
-                # Noch fehlende Sitzungen
+                fig.add_trace(go.Scatter(
+                    x=geplante_sorted['Datum'],
+                    y=geplante_sorted['Kumulative_Anzahl'],
+                    mode='lines+markers',
+                    name='Geplant',
+                    line=dict(color='#3498db', width=2, dash='dash'),
+                    marker=dict(size=4)
+                ))
+            
+            # Prognose-Linie (wenn genug Daten vorhanden)
+            if anzahl_letzter_monat > 0:
+                sitzungen_pro_tag = anzahl_letzter_monat / 30
                 fehlende_sitzungen = ziel_sitzungen - anzahl_sitzungen
                 
                 if fehlende_sitzungen > 0 and sitzungen_pro_tag > 0:
-                    # Geschätzte Tage bis zum Ziel
+                    tage_bis_ziel = fehlende_sitzungen / sitzungen_pro_tag
+                    ziel_datum = heute + timedelta(days=int(tage_bis_ziel))
+                    
+                    # Prognose-Linie von heute bis Zieldatum
+                    fig.add_trace(go.Scatter(
+                        x=[heute, ziel_datum],
+                        y=[anzahl_sitzungen, ziel_sitzungen],
+                        mode='lines',
+                        name='Prognose (30-Tage-Basis)',
+                        line=dict(color='#e74c3c', width=2, dash='dot'),
+                        marker=dict(size=8, symbol='star')
+                    ))
+                    
+                    # Ziel-Marker
+                    fig.add_trace(go.Scatter(
+                        x=[ziel_datum],
+                        y=[ziel_sitzungen],
+                        mode='markers+text',
+                        name='Ziel: 600 Sitzungen',
+                        marker=dict(size=12, color='#e74c3c', symbol='star'),
+                        text=[f"Ziel: {ziel_datum.strftime('%d.%m.%Y')}"],
+                        textposition='top center',
+                        showlegend=False
+                    ))
+            
+            # Ziellinie bei 600
+            if not alle_sitzungen_sorted.empty:
+                x_min = alle_sitzungen_sorted['Datum'].min()
+                x_max = alle_sitzungen_sorted['Datum'].max()
+                
+                # Wenn Prognose vorhanden, x_max erweitern
+                if anzahl_letzter_monat > 0:
+                    sitzungen_pro_tag = anzahl_letzter_monat / 30
+                    fehlende_sitzungen = ziel_sitzungen - anzahl_sitzungen
+                    if fehlende_sitzungen > 0 and sitzungen_pro_tag > 0:
+                        tage_bis_ziel = fehlende_sitzungen / sitzungen_pro_tag
+                        ziel_datum = heute + timedelta(days=int(tage_bis_ziel))
+                        x_max = max(x_max, ziel_datum)
+                
+                fig.add_trace(go.Scatter(
+                    x=[x_min, x_max],
+                    y=[ziel_sitzungen, ziel_sitzungen],
+                    mode='lines',
+                    name='Ziel: 600',
+                    line=dict(color='#95a5a6', width=1, dash='dot'),
+                    showlegend=False
+                ))
+            
+            # Layout anpassen
+            fig.update_layout(
+                title="Sitzungsverlauf und Prognose",
+                xaxis_title="Datum",
+                yaxis_title="Anzahl Sitzungen (kumulativ)",
+                hovermode='x unified',
+                height=500,
+                showlegend=True,
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1
+                )
+            )
+            
+            # Y-Achse bis mindestens 600
+            fig.update_yaxis(range=[0, max(650, alle_sitzungen_sorted['Kumulative_Anzahl'].max() + 50)])
+            
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Textliche Prognose
+            if anzahl_letzter_monat > 0:
+                sitzungen_pro_tag = anzahl_letzter_monat / 30
+                fehlende_sitzungen = ziel_sitzungen - anzahl_sitzungen
+                
+                if fehlende_sitzungen > 0 and sitzungen_pro_tag > 0:
                     tage_bis_ziel = fehlende_sitzungen / sitzungen_pro_tag
                     ziel_datum = heute + timedelta(days=int(tage_bis_ziel))
                     
                     st.info(
                         f"Basierend auf den letzten 30 Tagen ({anzahl_letzter_monat} Sitzungen): "
                         f"Wenn du so weiter machst, hast du am **{ziel_datum.strftime('%d.%m.%Y')}** "
-                        f"600 Sitzungen erreicht!"
+                        f"600 Sitzungen erreicht! Das sind noch **{int(tage_bis_ziel)} Tage**."
                     )
                 elif fehlende_sitzungen <= 0:
                     st.success("Glückwunsch! Du hast dein Ziel von 600 Sitzungen erreicht!")
