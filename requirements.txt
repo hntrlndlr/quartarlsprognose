@@ -3,6 +3,3 @@ pandas
 streamlit-calendar
 plotly
 pypdf
-zipfile
-io
-typing
