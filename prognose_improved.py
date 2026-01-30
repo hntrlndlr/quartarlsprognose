@@ -14,6 +14,8 @@ from contextlib import contextmanager
 import streamlit.components.v1 as components
 import locale
 from typing import Optional, List, Dict, Tuple
+import io
+import zipfile
 
 # =============================================================================
 # LOCALE SETUP
@@ -67,6 +69,17 @@ WOCHENTAGE = {
     "Freitag": 4,
 }
 
+LEISTUNGSZIFFERN = {
+    "PTG": "23220 - Psychotherapeutisches Gespräch",
+    "Anamnese": "35140 - Biografische Anamnese",
+    "Probatorik": "35150 - Probatorische Sitzung",
+    "Sprechstunde": "35151 - Psychotherapeutische Sprechstunde",
+    "KZT_1": "35421 - Kurzzeittherapie 1",  # Sitzung 1-12
+    "KZT_2": "35422 - Kurzzeittherapie 2",  # Sitzung 13-24
+    "LZT": "35425 - Langzeittherapie",
+    "RFP": "35425R - Rezidivprophylaxe"
+}
+
 HILFE = {
     "Kalender": """
 **Kalender**
@@ -106,6 +119,15 @@ HILFE = {
 - Nutze die Tabs, um die verschiedenen Funktionen zu steuern
 - Hilfe-Expander geben kurze Erklärungen
 - Für detaillierte Infos siehe Dokumentation oder Sidebar-Hilfe
+""",
+    "Abrechnung": """
+**Abrechnung**
+- Wähle Monat und Jahr für die Abrechnung
+- Erfasse/prüfe Therapeutendaten (werden auf allen Abrechnungen verwendet)
+- Erfasse/prüfe Klientenstammdaten für jeden Klienten
+- Generiere automatisch ausfüllbare PDFs
+- Lade die kombinierte Abrechnung als eine PDF herunter
+- Wichtig: 'form_blank.pdf' muss im Arbeitsverzeichnis liegen
 """
 }
 
@@ -147,6 +169,43 @@ def init_database():
                 nummer INTEGER,
                 art_supervision TEXT,
                 stundenanzahl INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Tabelle für Klientenstammdaten
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS klienten_stammdaten (
+                kuerzel TEXT PRIMARY KEY,
+                chiffre TEXT,
+                diagnose_sprechstunde TEXT,
+                diagnose_antrag TEXT,
+                anmerkungen TEXT,
+                erstgespraech_datum DATE,
+                v_diagnose INTEGER DEFAULT 0,
+                g_diagnose INTEGER DEFAULT 0,
+                a_diagnose INTEGER DEFAULT 0,
+                z_diagnose INTEGER DEFAULT 0,
+                keine_wb INTEGER DEFAULT 0,
+                kk_wechsel INTEGER DEFAULT 0,
+                uebergabe INTEGER DEFAULT 0,
+                uebernahme INTEGER DEFAULT 0,
+                ue_von TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Tabelle für Therapeutendaten
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS therapeut_daten (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                name TEXT,
+                anschrift1 TEXT,
+                anschrift2 TEXT,
+                steuernummer TEXT,
+                praxis TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -664,6 +723,160 @@ def init_session_state():
 
 
 # =============================================================================
+# STAMMDATEN-MANAGEMENT
+# =============================================================================
+
+def hole_klienten_stammdaten(kuerzel: str) -> Optional[Dict]:
+    """Holt Stammdaten eines Klienten aus der Datenbank."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM klienten_stammdaten WHERE kuerzel = ?", (kuerzel,))
+            row = cursor.fetchone()
+            
+            if row:
+                return dict(row)
+            return None
+    except Exception as e:
+        st.error(f"Fehler beim Laden der Klientendaten: {e}")
+        return None
+
+
+def speichere_klienten_stammdaten(kuerzel: str, daten: Dict):
+    """Speichert oder aktualisiert Stammdaten eines Klienten."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Prüfen ob Klient bereits existiert
+            cursor.execute("SELECT kuerzel FROM klienten_stammdaten WHERE kuerzel = ?", (kuerzel,))
+            exists = cursor.fetchone()
+            
+            if exists:
+                # Update
+                cursor.execute("""
+                    UPDATE klienten_stammdaten 
+                    SET chiffre = ?, diagnose_sprechstunde = ?, diagnose_antrag = ?, anmerkungen = ?,
+                        erstgespraech_datum = ?, v_diagnose = ?, g_diagnose = ?, 
+                        a_diagnose = ?, z_diagnose = ?, keine_wb = ?, kk_wechsel = ?,
+                        uebergabe = ?, uebernahme = ?, ue_von = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE kuerzel = ?
+                """, (
+                    daten.get('chiffre'),
+                    daten.get('diagnose_sprechstunde'),
+                    daten.get('diagnose_antrag'),
+                    daten.get('anmerkungen'),
+                    daten.get('erstgespraech_datum'),
+                    daten.get('v_diagnose', 0),
+                    daten.get('g_diagnose', 0),
+                    daten.get('a_diagnose', 0),
+                    daten.get('z_diagnose', 0),
+                    daten.get('keine_wb', 0),
+                    daten.get('kk_wechsel', 0),
+                    daten.get('uebergabe', 0),
+                    daten.get('uebernahme', 0),
+                    daten.get('ue_von'),
+                    kuerzel
+                ))
+            else:
+                # Insert
+                cursor.execute("""
+                    INSERT INTO klienten_stammdaten 
+                    (kuerzel, chiffre, diagnose_sprechstunde, diagnose_antrag, anmerkungen, erstgespraech_datum,
+                     v_diagnose, g_diagnose, a_diagnose, z_diagnose, keine_wb, kk_wechsel,
+                     uebergabe, uebernahme, ue_von)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    kuerzel,
+                    daten.get('chiffre'),
+                    daten.get('diagnose_sprechstunde'),
+                    daten.get('diagnose_antrag'),
+                    daten.get('anmerkungen'),
+                    daten.get('erstgespraech_datum'),
+                    daten.get('v_diagnose', 0),
+                    daten.get('g_diagnose', 0),
+                    daten.get('a_diagnose', 0),
+                    daten.get('z_diagnose', 0),
+                    daten.get('keine_wb', 0),
+                    daten.get('kk_wechsel', 0),
+                    daten.get('uebergabe', 0),
+                    daten.get('uebernahme', 0),
+                    daten.get('ue_von')
+                ))
+    except Exception as e:
+        st.error(f"Fehler beim Speichern der Klientendaten: {e}")
+
+
+def hole_therapeut_daten() -> Optional[Dict]:
+    """Holt Therapeutendaten aus der Datenbank."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM therapeut_daten WHERE id = 1")
+            row = cursor.fetchone()
+            
+            if row:
+                return dict(row)
+            return None
+    except Exception as e:
+        st.error(f"Fehler beim Laden der Therapeutendaten: {e}")
+        return None
+
+
+def speichere_therapeut_daten(daten: Dict):
+    """Speichert oder aktualisiert Therapeutendaten."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Prüfen ob Daten bereits existieren
+            cursor.execute("SELECT id FROM therapeut_daten WHERE id = 1")
+            exists = cursor.fetchone()
+            
+            if exists:
+                # Update
+                cursor.execute("""
+                    UPDATE therapeut_daten 
+                    SET name = ?, anschrift1 = ?, anschrift2 = ?, steuernummer = ?, praxis = ?,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = 1
+                """, (
+                    daten.get('name'),
+                    daten.get('anschrift1'),
+                    daten.get('anschrift2'),
+                    daten.get('steuernummer'),
+                    daten.get('praxis')
+                ))
+            else:
+                # Insert
+                cursor.execute("""
+                    INSERT INTO therapeut_daten (id, name, anschrift1, anschrift2, steuernummer, praxis)
+                    VALUES (1, ?, ?, ?, ?, ?)
+                """, (
+                    daten.get('name'),
+                    daten.get('anschrift1'),
+                    daten.get('anschrift2'),
+                    daten.get('steuernummer'),
+                    daten.get('praxis')
+                ))
+    except Exception as e:
+        st.error(f"Fehler beim Speichern der Therapeutendaten: {e}")
+
+
+def bestimme_leistungsziffer(sitzungsart: str, nummer: Optional[int]) -> str:
+    """Bestimmt die korrekte Leistungsziffer basierend auf Sitzungsart und Nummer."""
+    if sitzungsart == "KZT":
+        if nummer and nummer <= 12:
+            return LEISTUNGSZIFFERN["KZT_1"]
+        else:
+            return LEISTUNGSZIFFERN["KZT_2"]
+    elif sitzungsart in LEISTUNGSZIFFERN:
+        return LEISTUNGSZIFFERN[sitzungsart]
+    else:
+        return ""
+
+
+# =============================================================================
 # HAUPT-APP
 # =============================================================================
 
@@ -957,7 +1170,8 @@ def main():
         "Abwesenheiten",
         "Klienten",
         "Quartalsprognose",
-        "Supervision"
+        "Supervision",
+        "Abrechnung"
     ])
     
     # =============================================================================
@@ -1893,6 +2107,396 @@ def main():
                             st.success("Alle Supervisions-Anforderungen erfüllt!")
             else:
                 st.info("Füge eine erste Supervisionssitzung hinzu, um die Supervisionsübersicht zu öffnen.")
+    
+    # =============================================================================
+    # TAB 6: ABRECHNUNG
+    # =============================================================================
+    
+    with tabs[5]:
+        st.header("Abrechnung")
+        
+        st.info("Hier kannst du monatliche Abrechnungen automatisch erstellen. Wähle einen Monat und generiere für alle Klienten mit Sitzungen in diesem Monat ausfüllbare PDFs.")
+        
+        # Monat/Jahr Auswahl
+        col_monat, col_jahr = st.columns(2)
+        
+        with col_monat:
+            monate = [
+                "Januar", "Februar", "März", "April", "Mai", "Juni",
+                "Juli", "August", "September", "Oktober", "November", "Dezember"
+            ]
+            selected_monat = st.selectbox("Abrechnungsmonat", monate, index=date.today().month - 1)
+            monat_nummer = monate.index(selected_monat) + 1
+        
+        with col_jahr:
+            current_year = date.today().year
+            selected_jahr = st.number_input("Abrechnungsjahr", min_value=2020, max_value=2030, value=current_year)
+        
+        # Therapeutendaten abfragen/bearbeiten
+        st.divider()
+        st.subheader("Therapeutendaten")
+        
+        therapeut = hole_therapeut_daten()
+        
+        with st.form("therapeut_daten_form"):
+            st.write("Diese Daten werden auf allen Abrechnungen verwendet:")
+            
+            therap_name = st.text_input("Name", value=therapeut.get('name', '') if therapeut else '')
+            therap_anschrift1 = st.text_input("Anschrift Zeile 1", value=therapeut.get('anschrift1', '') if therapeut else '')
+            therap_anschrift2 = st.text_input("Anschrift Zeile 2", value=therapeut.get('anschrift2', '') if therapeut else '')
+            therap_steuernummer = st.text_input("Steuernummer", value=therapeut.get('steuernummer', '') if therapeut else '')
+            therap_praxis = st.text_input("Praxis", value=therapeut.get('praxis', '') if therapeut else '', help="z.B. 'Externe Praxis Dr. Müller' oder 'IPP'")
+            
+            if st.form_submit_button("Therapeutendaten speichern"):
+                speichere_therapeut_daten({
+                    'name': therap_name,
+                    'anschrift1': therap_anschrift1,
+                    'anschrift2': therap_anschrift2,
+                    'steuernummer': therap_steuernummer,
+                    'praxis': therap_praxis
+                })
+                st.success("Therapeutendaten gespeichert!")
+                st.rerun()
+        
+        # Klienten mit Sitzungen im Monat finden
+        st.divider()
+        st.subheader(f"Klienten mit Sitzungen im {selected_monat} {selected_jahr}")
+        
+        # Sitzungen im ausgewählten Monat filtern
+        sitzungen_monat = st.session_state.sitzungen[
+            (st.session_state.sitzungen['Datum'].dt.month == monat_nummer) &
+            (st.session_state.sitzungen['Datum'].dt.year == selected_jahr) &
+            (st.session_state.sitzungen['Sitzungsart'] != 'Supervision')
+        ].copy()
+        
+        if not sitzungen_monat.empty:
+            # Klienten gruppieren
+            klienten_im_monat = sitzungen_monat['Klient'].dropna().unique()
+            
+            st.write(f"**{len(klienten_im_monat)} Klient(en)** mit Sitzungen im {selected_monat}:")
+            st.write(", ".join(klienten_im_monat))
+            
+            # Klientendaten erfassen/bearbeiten
+            st.divider()
+            st.subheader("Klientenstammdaten prüfen/ergänzen")
+            
+            # Für jeden Klienten Stammdaten erfassen
+            if 'abrechnung_klienten_daten' not in st.session_state:
+                st.session_state.abrechnung_klienten_daten = {}
+            
+            # Tabs für jeden Klienten
+            if len(klienten_im_monat) > 0:
+                klient_tabs = st.tabs(list(klienten_im_monat))
+                
+                for idx, klient in enumerate(klienten_im_monat):
+                    with klient_tabs[idx]:
+                        # Bestehende Stammdaten laden
+                        stammdaten = hole_klienten_stammdaten(klient)
+                        
+                        # Erstgespräch = erste Sprechstunde
+                        erste_sprechstunde = st.session_state.sitzungen[
+                            (st.session_state.sitzungen['Klient'] == klient) &
+                            (st.session_state.sitzungen['Sitzungsart'] == 'Sprechstunde')
+                        ].sort_values('Datum')
+                        
+                        erstgespraech = erste_sprechstunde.iloc[0]['Datum'].date() if not erste_sprechstunde.empty else None
+                        
+                        with st.form(f"klient_stammdaten_{klient}"):
+                            st.write(f"**Stammdaten für {klient}**")
+                            
+                            col1, col2 = st.columns(2)
+                            
+                            with col1:
+                                klient_name = st.text_input(
+                                    "Klient (erste 3 Buchstaben Nachname)", 
+                                    value=stammdaten.get('chiffre', '') if stammdaten else '',
+                                    max_chars=3,
+                                    help="Großbuchstaben, z.B. MÜL für Müller - wird auch als Chiffre verwendet"
+                                )
+                                
+                                diagnose_sprechstunde = st.text_input(
+                                    "Diagnose nach Sprechstunde (ICD-10)",
+                                    value=stammdaten.get('diagnose_sprechstunde', '') if stammdaten else '',
+                                    help="Einmalig erfasst, wird nicht geändert"
+                                )
+                                
+                                diagnose_antrag = st.text_input(
+                                    "Aktuelle Antragsdiagnose (ICD-10)",
+                                    value=stammdaten.get('diagnose_antrag', '') if stammdaten else '',
+                                    help="Kann sich ändern, wird überschrieben"
+                                )
+                                
+                                anmerkungen = st.text_area(
+                                    "Anmerkungen",
+                                    value=stammdaten.get('anmerkungen', '') if stammdaten else '',
+                                    help="Optional - erscheint auf der Abrechnung"
+                                )
+                                
+                                st.write(f"**Erstgespräch:** {erstgespraech.strftime('%d.%m.%Y') if erstgespraech else 'Nicht gefunden'}")
+                            
+                            with col2:
+                                st.write("**Diagnoseart:**")
+                                v_diagnose = st.checkbox("Verdachtsdiagnose (V)", value=bool(stammdaten.get('v_diagnose', 0)) if stammdaten else False)
+                                g_diagnose = st.checkbox("Gesicherte Diagnose (G)", value=bool(stammdaten.get('g_diagnose', 0)) if stammdaten else False)
+                                a_diagnose = st.checkbox("Ausgeschlossene Diagnose (A)", value=bool(stammdaten.get('a_diagnose', 0)) if stammdaten else False)
+                                z_diagnose = st.checkbox("Zustand nach Diagnose (Z)", value=bool(stammdaten.get('z_diagnose', 0)) if stammdaten else False)
+                                
+                                st.write("**Sonstiges:**")
+                                keine_wb = st.checkbox("Keine Weiterbehandlung", value=bool(stammdaten.get('keine_wb', 0)) if stammdaten else False)
+                                kk_wechsel = st.checkbox("Krankenkassenwechsel", value=bool(stammdaten.get('kk_wechsel', 0)) if stammdaten else False)
+                                
+                                st.write("**Übergabe/Übernahme:**")
+                                uebergabe = st.checkbox("Übergabe", value=bool(stammdaten.get('uebergabe', 0)) if stammdaten else False)
+                                uebernahme = st.checkbox("Übernahme", value=bool(stammdaten.get('uebernahme', 0)) if stammdaten else False)
+                                
+                                # Ue-Von nur anzeigen wenn Übergabe oder Übernahme aktiv
+                                if uebergabe or uebernahme:
+                                    ue_von = st.text_input("Übergabe an / Übernahme von", value=stammdaten.get('ue_von', '') if stammdaten else '')
+                                else:
+                                    ue_von = ''
+                            
+                            if st.form_submit_button(f"Stammdaten für {klient} speichern"):
+                                speichere_klienten_stammdaten(klient, {
+                                    'chiffre': klient_name.upper(),
+                                    'diagnose_sprechstunde': diagnose_sprechstunde,
+                                    'diagnose_antrag': diagnose_antrag,
+                                    'anmerkungen': anmerkungen,
+                                    'erstgespraech_datum': erstgespraech.strftime('%Y-%m-%d') if erstgespraech else None,
+                                    'v_diagnose': 1 if v_diagnose else 0,
+                                    'g_diagnose': 1 if g_diagnose else 0,
+                                    'a_diagnose': 1 if a_diagnose else 0,
+                                    'z_diagnose': 1 if z_diagnose else 0,
+                                    'keine_wb': 1 if keine_wb else 0,
+                                    'kk_wechsel': 1 if kk_wechsel else 0,
+                                    'uebergabe': 1 if uebergabe else 0,
+                                    'uebernahme': 1 if uebernahme else 0,
+                                    'ue_von': ue_von
+                                })
+                                st.success(f"Stammdaten für {klient} gespeichert!")
+                                st.rerun()
+            
+            # PDF-Generierung
+            st.divider()
+            st.subheader("Abrechnungs-PDFs generieren")
+            
+            st.info("Hinweis: Stelle sicher, dass 'form_blank.pdf' im gleichen Verzeichnis wie dieses Skript liegt.")
+            
+            # Eindeutiger Key für diese Generierung
+            generation_key = f"pdfs_{selected_monat}_{selected_jahr}"
+            
+            # Button zur PDF-Generierung
+            if st.button("🔄 PDFs generieren", type="primary", key="btn_generate_pdfs"):
+                # Session State zurücksetzen für neue Generierung
+                if generation_key in st.session_state:
+                    del st.session_state[generation_key]
+                    
+                # Prüfen ob Therapeutendaten vorhanden
+                therapeut = hole_therapeut_daten()
+                if not therapeut or not therapeut.get('name'):
+                    st.error("Bitte Therapeutendaten zuerst speichern!")
+                else:
+                    # Prüfen ob form_blank.pdf existiert
+                    if not os.path.exists('form_blank.pdf'):
+                        st.error("form_blank.pdf nicht gefunden! Bitte Datei ins Arbeitsverzeichnis legen.")
+                    else:
+                        try:
+                            from pypdf import PdfReader, PdfWriter
+                            
+                            pdfs_erstellt = []
+                            fehler = []
+                            
+                            for klient in klienten_im_monat:
+                                try:
+                                    # Stammdaten holen
+                                    stammdaten = hole_klienten_stammdaten(klient)
+                                    if not stammdaten or not stammdaten.get('chiffre'):
+                                        fehler.append(f"{klient}: Stammdaten fehlen (Chiffre)")
+                                        continue
+                                    
+                                    # Sitzungen dieses Klienten im Monat
+                                    klient_sitzungen = sitzungen_monat[
+                                        sitzungen_monat['Klient'] == klient
+                                    ].sort_values('Datum')
+                                    
+                                    if klient_sitzungen.empty:
+                                        continue
+                                    
+                                    # Quartal bestimmen
+                                    quartal = ((monat_nummer - 1) // 3) + 1
+                                    
+                                    # PDF-Formular ausfüllen
+                                    reader = PdfReader('form_blank.pdf')
+                                    writer = PdfWriter()
+                                    
+                                    # Seite kopieren
+                                    writer.append(reader)
+                                    
+                                    # Erstgespräch formatieren
+                                    erstgespraech_str = ''
+                                    if stammdaten.get('erstgespraech_datum'):
+                                        erstgespraech_dt = pd.to_datetime(stammdaten.get('erstgespraech_datum'))
+                                        erstgespraech_str = erstgespraech_dt.strftime('%d.%m.%Y')
+                                    
+                                    # Formularfelder befüllen
+                                    pdf_data = {
+                                        # Stammdaten
+                                        "Name": therapeut.get('name', ''),
+                                        "Anschrift1": therapeut.get('anschrift1', ''),
+                                        "Anschrift2": therapeut.get('anschrift2', ''),
+                                        "Steuernummer": therapeut.get('steuernummer', ''),
+                                        "Praxis": therapeut.get('praxis', ''),
+                                        "Klient": stammdaten.get('chiffre', ''),
+                                        "Chiffre": stammdaten.get('chiffre', ''),
+                                        
+                                        # Abrechnung
+                                        "Abrechnungsquartal": f"Q{quartal} -",
+                                        "Abrechnungsjahr": str(selected_jahr),
+                                        "Abrechnungsmonat": selected_monat,
+                                        
+                                        # Diagnosen
+                                        "Diagnose-S": stammdaten.get('diagnose_sprechstunde', ''),
+                                        "Diagnose-A": stammdaten.get('diagnose_antrag', ''),
+                                        
+                                        # Diagnoseart-Checkboxen (V, G, A, Z)
+                                        "V-D": "/Ja" if stammdaten.get('v_diagnose') else "/Off",
+                                        "G-D": "/Ja" if stammdaten.get('g_diagnose') else "/Off",
+                                        "A-D": "/Ja" if stammdaten.get('a_diagnose') else "/Off",
+                                        "Z-D": "/Ja" if stammdaten.get('z_diagnose') else "/Off",
+                                        
+                                        # Antragsstatus
+                                        "kein-Antrag": "",
+                                        "Erstgespraech": erstgespraech_str,
+                                        "Abschlussgespraech": "",
+                                        
+                                        # Übergabe/Übernahme
+                                        "Uebergabe": "/Ja" if stammdaten.get('uebergabe') else "/Off",
+                                        "Uebernahme": "/Ja" if stammdaten.get('uebernahme') else "/Off",
+                                        "Ue-von": stammdaten.get('ue_von', ''),
+                                        
+                                        # Krankenkassenwechsel
+                                        "KK-Wechsel-Ja": "/Ja" if stammdaten.get('kk_wechsel') else "/Off",
+                                        "KK-Wechsel-Nein": "/Off" if stammdaten.get('kk_wechsel') else "/Ja",
+                                        
+                                        # Keine Weiterbehandlung
+                                        "Keine-WB": "/Ja" if stammdaten.get('keine_wb') else "/Off",
+                                        
+                                        # Anmerkungen
+                                        "Anmerkungen": stammdaten.get('anmerkungen', ''),
+                                        
+                                        # Signatur-Datum
+                                        "Datum-Signatur": date.today().strftime('%d.%m.%Y')
+                                    }
+                                    
+                                    # Sitzungen einfügen (max 8)
+                                    for idx, (_, sitzung) in enumerate(klient_sitzungen.head(8).iterrows()):
+                                        idx_1based = idx + 1
+                                        pdf_data[f"Datum-{idx_1based}"] = sitzung['Datum'].strftime('%d.%m.%Y')
+                                        pdf_data[f"D{idx_1based}"] = "50 min"
+                                        lz = bestimme_leistungsziffer(sitzung['Sitzungsart'], sitzung.get('Nummer'))
+                                        pdf_data[f"LZ{idx_1based}"] = lz
+                                    
+                                    # Felder aktualisieren
+                                    writer.update_page_form_field_values(writer.pages[0], pdf_data)
+                                    
+                                    # PDF in BytesIO speichern
+                                    pdf_buffer = io.BytesIO()
+                                    writer.write(pdf_buffer)
+                                    pdf_buffer.seek(0)
+                                    
+                                    pdfs_erstellt.append((klient, pdf_buffer))
+                                    
+                                except Exception as e:
+                                    fehler.append(f"{klient}: {str(e)}")
+                            
+                            # PDFs im Session State speichern
+                            st.session_state['generated_pdfs'] = pdfs_erstellt
+                            st.session_state['pdf_errors'] = fehler
+                            st.session_state['pdf_monat'] = selected_monat
+                            st.session_state['pdf_jahr'] = selected_jahr
+                            
+                            if pdfs_erstellt:
+                                st.success(f"✅ {len(pdfs_erstellt)} PDF(s) erfolgreich generiert!")
+                            if fehler:
+                                st.error("❌ Fehler bei folgenden Klienten:")
+                                for fehler_msg in fehler:
+                                    st.write(f"- {fehler_msg}")
+                            
+                        except Exception as e:
+                            st.error(f"Fehler bei PDF-Generierung: {e}")
+            
+            # Download-Bereich (wird angezeigt wenn PDFs im Session State sind)
+            if 'generated_pdfs' in st.session_state and st.session_state['generated_pdfs']:
+                pdfs_erstellt = st.session_state['generated_pdfs']
+                pdf_monat = st.session_state.get('pdf_monat', selected_monat)
+                pdf_jahr = st.session_state.get('pdf_jahr', selected_jahr)
+                
+                st.divider()
+                st.markdown(f"### 📦 Downloads für {pdf_monat} {pdf_jahr}")
+                
+                # ZIP-Archiv mit allen PDFs
+                col1, col2 = st.columns([2, 1])
+                with col1:
+                    st.markdown("**Alle Abrechnungen auf einmal:**")
+                with col2:
+                    try:
+                        zip_buffer = io.BytesIO()
+                        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                            for klient, pdf_buffer in pdfs_erstellt:
+                                pdf_buffer.seek(0)
+                                zip_file.writestr(
+                                    f"Abrechnung_{klient}_{pdf_monat}_{pdf_jahr}.pdf",
+                                    pdf_buffer.read()
+                                )
+                        
+                        zip_buffer.seek(0)
+                        
+                        st.download_button(
+                            label=f"📦 Alle {len(pdfs_erstellt)} PDFs (ZIP)",
+                            data=zip_buffer,
+                            file_name=f"Abrechnungen_{pdf_monat}_{pdf_jahr}.zip",
+                            mime="application/zip",
+                            use_container_width=True
+                        )
+                        
+                    except Exception as e:
+                        st.error(f"Fehler beim Erstellen des ZIP-Archivs: {e}")
+                
+                st.markdown("---")
+                st.markdown("**Einzelne Abrechnungen:**")
+                
+                # Erstelle Download-Buttons in Spalten (3 pro Zeile)
+                num_cols = 3
+                for i in range(0, len(pdfs_erstellt), num_cols):
+                    cols = st.columns(num_cols)
+                    for j in range(num_cols):
+                        idx = i + j
+                        if idx < len(pdfs_erstellt):
+                            klient, pdf_buffer = pdfs_erstellt[idx]
+                            with cols[j]:
+                                pdf_buffer.seek(0)
+                                st.download_button(
+                                    label=f"📄 {klient}",
+                                    data=pdf_buffer,
+                                    file_name=f"Abrechnung_{klient}_{pdf_monat}_{pdf_jahr}.pdf",
+                                    mime="application/pdf",
+                                    use_container_width=True,
+                                    key=f"dl_{klient}_{pdf_monat}_{pdf_jahr}_{idx}"
+                                )
+                
+                # Button zum Zurücksetzen
+                st.divider()
+                if st.button("🗑️ Download-Bereich zurücksetzen", key="reset_downloads"):
+                    del st.session_state['generated_pdfs']
+                    if 'pdf_errors' in st.session_state:
+                        del st.session_state['pdf_errors']
+                    if 'pdf_monat' in st.session_state:
+                        del st.session_state['pdf_monat']
+                    if 'pdf_jahr' in st.session_state:
+                        del st.session_state['pdf_jahr']
+                    st.rerun()
+        else:
+            st.info(f"Keine Sitzungen im {selected_monat} {selected_jahr} gefunden.")
+
 
 
 # =============================================================================
